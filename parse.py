@@ -38,6 +38,8 @@ else:
 
 mode = 2 # 0: gold, 1: 1best, 2: nbest
 f = open('output', 'w')
+if mode == 2:
+	g = open('scores', 'w')
 with open(path, 'rb') as csvfile:
 	reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 	iter = 0
@@ -50,9 +52,10 @@ with open(path, 'rb') as csvfile:
 				f.write(str(best(row[3]).ptb_parse) + '\n')
 			elif mode == 2:
 				nbest_list = nbest(row[3])
-				f.write(str(len(nbest_list)) + '\n')
+				g.write(str(len(nbest_list)) + '\n')
 				for tree in nbest_list:
-					f.write(str(tree.ptb_parse) + '\t' + str(tree.parser_score) + '\t' + str(tree.reranker_score) + '\n')
+					f.write(str(tree.ptb_parse) + '\n')
+					g.write(str(tree.parser_score) + '\t' + str(tree.reranker_score) + '\n')
 			else:
 				print 'plz'
 		if iter % 3 == 2:
@@ -60,9 +63,10 @@ with open(path, 'rb') as csvfile:
 				f.write(str(best(row[3]).ptb_parse) + '\n')
 			elif mode == 2:
 				nbest_list = nbest(row[3])
-				f.write(str(len(nbest_list)) + '\n')
+				g.write(str(len(nbest_list)) + '\n')
 				for tree in nbest_list:
-					f.write(str(tree.ptb_parse) + '\t' + str(tree.parser_score) + '\t' + str(tree.reranker_score) + '\n')
+					f.write(str(tree.ptb_parse) + '\n')
+					g.write(str(tree.parser_score) + '\t' + str(tree.reranker_score) + '\n')
 			else:
 				print 'plz'
 		f.flush()
