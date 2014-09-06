@@ -37,9 +37,9 @@ else:
 	sys.exit(0)
 
 mode = 2 # 0: gold, 1: 1best, 2: nbest
-f = open('output', 'w')
+f = open('tmp/output', 'w')
 if mode == 2:
-	g = open('scores', 'w')
+	g = open('tmp/scores', 'w')
 with open(path, 'rb') as csvfile:
 	reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 	iter = 0
@@ -69,7 +69,7 @@ with open(path, 'rb') as csvfile:
 					g.write(str(tree.parser_score) + '\t' + str(tree.reranker_score) + '\n')
 			else:
 				print 'plz'
-		f.flush()
+f.flush()
 f.close()
 
 	
