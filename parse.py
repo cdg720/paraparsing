@@ -1,4 +1,4 @@
-from bllipparser import RerankingParser
+from bllipparser import RerankingParser, Tree
 import csv
 import sys
 
@@ -49,7 +49,8 @@ with open(path, 'rb') as csvfile:
 			if mode == 0:
 				f.write(row[2] + '\n')
 			elif mode == 1:
-				f.write(str(best(row[3].split()).ptb_parse) + '\n')
+				words = Tree(row[2]).tokens() # pre-tokenized
+				f.write(str(best(words).ptb_parse) + '\n')
 			elif mode == 2:
 				nbest_list = nbest(row[3])
 				g.write(str(len(nbest_list)) + '\n')
