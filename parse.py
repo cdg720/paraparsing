@@ -36,7 +36,7 @@ else:
 	print 'wrong'
 	sys.exit(0)
 
-mode = 2 # 0: gold, 1: 1best, 2: nbest
+mode = 1 # 0: gold, 1: 1best, 2: nbest
 f = open('tmp/output', 'w')
 if mode == 2:
 	g = open('tmp/scores', 'w')
@@ -49,7 +49,7 @@ with open(path, 'rb') as csvfile:
 			if mode == 0:
 				f.write(row[2] + '\n')
 			elif mode == 1:
-				f.write(str(best(row[3]).ptb_parse) + '\n')
+				f.write(str(best(row[3].split()).ptb_parse) + '\n')
 			elif mode == 2:
 				nbest_list = nbest(row[3])
 				g.write(str(len(nbest_list)) + '\n')

@@ -46,12 +46,12 @@ class Token:
 		self.head = int(items[6]) # int
 		self.deprel = items[7]
 
-def main():
-	corpus = Corpus('output.sd205')
-	print len(corpus.sentences)
-	for sent in corpus.sentences:
-		print sent
-	# print ' '.join([x.form for x in corpus.sentences[0].tokens])
-	# print ' '.join([x.form for x in corpus.sentences[-2].tokens])
+# def main():
+# 	corpus = Corpus('output.sd205')
+# 	print len(corpus.sentences)
+# 	for sent in corpus.sentences:
+# 		print sent
+# 	# print ' '.join([x.form for x in corpus.sentences[0].tokens])
+# 	# print ' '.join([x.form for x in corpus.sentences[-2].tokens])
 
-main()
+# main()

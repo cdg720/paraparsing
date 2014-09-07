@@ -1,5 +1,6 @@
 import csv
 import sys
+from CoNLL import Corpus
 
 def ascii(s):
 	return all(ord(c) < 128 for c in s)
@@ -67,31 +68,34 @@ def fix_csv():
 
 # read()
 
-def read_nbest(file):
-	f = open(file, 'r')
-	count = 0
-	trees, pscores, rscores = [], [], []
-	tmp, tmp2, tmp3 = [], [], []
-	for line in f.read().splitlines():
-		if count == 0:
-			count = int(line)
-			if tmp:
-				trees.append(tmp)
-				pscores.append(tmp2)
-				rscores.append(tmp3)
-				tmp, tmp2, tmp3 = [], [], []
-			continue
-		tokens = line.split('\t')
-		if len(tokens) != 3:
-			print 'Wrong Format'
-			print line
-			sys.exit(0)
-		tmp.append(tokens[0])
-		tmp2.append(float(tokens[1]))
-		tmp3.append(float(tokens[2]))
-		count -= 1
-	return trees, pscores, rscores
-		
+# def read_nbest(file):
+# 	f = open(file, 'r')
+# 	count = 0
+# 	trees, pscores, rscores = [], [], []
+# 	tmp, tmp2, tmp3 = [], [], []
+# 	for line in f.read().splitlines():
+# 		if count == 0:
+# 			count = int(line)
+# 			if tmp:
+# 				trees.append(tmp)
+# 				pscores.append(tmp2)
+# 				rscores.append(tmp3)
+# 				tmp, tmp2, tmp3 = [], [], []
+# 			continue
+# 		tokens = line.split('\t')
+# 		if len(tokens) != 3:
+# 			print 'Wrong Format'
+# 			print line
+# 			sys.exit(0)
+# 		tmp.append(tokens[0])
+# 		tmp2.append(float(tokens[1]))
+# 		tmp3.append(float(tokens[2]))
+# 		count -= 1
+# 	return trees, pscores, rscores
+
+def remove_duplicates(trees, stats):
+	corpus = Corpus(trees)
+	print len(corpus.sentences)
 
 def remove_unicode(s):
 	s = s.replace('\xC2\x93', '``')
@@ -106,9 +110,10 @@ def remove_unicode(s):
 def main():
 	#fix_csv()
 	#check_unicode()
-	trees, pscores, rscores = read_nbest(sys.argv[1])
-	for ts, ps, rs in zip(trees, pscores, rscores):
-		print len(ts), len(ps), len(rs)
+	remove_duplicates(sys.argv[1], sys.argv[2])
+	# trees, pscores, rscores = read_nbest(sys.argv[1])
+	# for ts, ps, rs in zip(trees, pscores, rscores):
+	# 	print len(ts), len(ps), len(rs)
 
 main()
 		
