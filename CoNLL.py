@@ -1,3 +1,4 @@
+import gzip
 import sys
 import re
 
@@ -7,7 +8,10 @@ class Corpus:
 
 	def read_file(self, file):
 		self.sentences = []
-		f = open(file, 'r')
+		if file.endswith('.gz'):
+			f = gzip.open(file, 'rb')
+		else:
+			f = open(file, 'r')
 		tokens = []
 		for line in f.read().splitlines():
 			line = line.strip()
@@ -16,7 +20,7 @@ class Corpus:
 				tokens = []
 				continue
 			items = line.split('\t')
-			if len(items) != 8:
+			if len(items) != 8 and len(items) != 10:
 				print 'Wrong Format'
 				print line
 				sys.exit(0)

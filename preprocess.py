@@ -1,4 +1,5 @@
 import csv
+import gzip
 import sys
 import time
 from CoNLL import Corpus
@@ -7,18 +8,24 @@ from bllipparser import Tree
 def ascii(s):
 	return all(ord(c) < 128 for c in s)
 
+def check_duplicate_tree(trees, cand):
+	for tree in trees:
+		if same(tree, cand):
+			return True
+	return False
+
 def check_unicode():
 	if len(sys.argv) != 2:
 		print 'usage: python preprocess.py paraphrases.csv'
 		sys.exit(0)
 	with open(sys.argv[1], 'rb') as csvfile:
-		iter = 0
+		ind = 0
 		reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 		for row in reader:
 			if not ascii(row[2]):
-				print iter, row[2]
+				print ind, row[2]
 			if not ascii(row[3]):
-				print iter, row[3]
+				print ind, row[3]
 
 def fix_csv():
 	if len(sys.argv) != 2:
@@ -26,10 +33,10 @@ def fix_csv():
 		sys.exit(0)
 	rows = []
 	with open(sys.argv[1], 'rb') as csvfile:
-		iter = 0
+		ind = 0
 		reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 		for row in reader:
-			iter += 1
+			ind += 1
 			row[2] = remove_unicode(row[2])
 			row[3] = remove_unicode(row[3])
 			rows.append(row)
@@ -58,10 +65,10 @@ def get_words(input, out1, out2):
 	f = open(input, 'r')
 	g = open(out1, 'w')
 	h = open(out2, 'w')
-	iter = 0
+	ind = 0
 	for line in f.read().splitlines():
-		iter += 1
-		if iter % 2 == 1:
+		ind += 1
+		if ind % 2 == 1:
 			g.write(' '.join(Tree(line).tokens()) + '\n')
 		else:
 			h.write(' '.join(Tree(line).tokens()) + '\n')
@@ -76,47 +83,58 @@ def get_words(input, out1, out2):
 #         print 'usage: python preprocess.py parapharses.csv'
 #         sys.exit(0)
 #     f = open(sys.argv[1], 'r')
-#     iter = 0
+#     ind = 0
 #     for line in f.read().splitlines():
-#         iter += 1
+#         ind += 1
 #         words = line.split()
 #         for word in words:
 #             if not ascii(word):
-#                 print iter, word
+#                 print ind, word
 #         #print ' '.join(words)
 
 # read()
 
-# def read_nbest(file):
-# 	f = open(file, 'r')
-# 	count = 0
-# 	trees, pscores, rscores = [], [], []
-# 	tmp, tmp2, tmp3 = [], [], []
-# 	for line in f.read().splitlines():
-# 		if count == 0:
-# 			count = int(line)
-# 			if tmp:
-# 				trees.append(tmp)
-# 				pscores.append(tmp2)
-# 				rscores.append(tmp3)
-# 				tmp, tmp2, tmp3 = [], [], []
-# 			continue
-# 		tokens = line.split('\t')
-# 		if len(tokens) != 3:
-# 			print 'Wrong Format'
-# 			print line
-# 			sys.exit(0)
-# 		tmp.append(tokens[0])
-# 		tmp2.append(float(tokens[1]))
-# 		tmp3.append(float(tokens[2]))
-# 		count -= 1
-# 	return trees, pscores, rscores
+def read_file(file):
+	if file.endswith('.gz'):
+		return gzip.open(file, 'rb')
+	else:
+		return open(file, 'r')
 
+# TODO: fix this. very inefficient
 def remove_duplicates(trees, stats):
-	start = time.time()
 	corpus = Corpus(trees)
-	print len(corpus.sentences)
-	print time.time() - start
+	f = read_file(stats)
+	it = iter(corpus.sentences)
+	count = 0
+	g = gzip.open('50best.sd205.nodup.gz', 'wb')
+	h = gzip.open('50best.stats.nodup.gz', 'wb')
+	tmp1, tmp2, tmp3 = [], [], []
+	for line in f.read().splitlines():
+		if count == 0:
+			count = int(line)
+			if tmp1:
+				tmp1, tmp2, tmp3 = trim(tmp1, tmp2, tmp3)
+				h.write(str(len(tmp2)) + '\n')				
+				for t1, t2, t3 in zip(tmp1, tmp2, tmp3):
+					g.write(str(t1) + '\n')
+					h.write(str(t2) + '\t' + str(t3) + '\n')
+				tmp1, tmp2, tmp3 = [], [], []
+			continue
+		tokens = line.split('\t')
+		if len(tokens) != 2:
+			print 'Wrong Format'
+			print line
+			sys.exit(0)
+		tmp1.append(next(it))
+		tmp2.append(tokens[0])
+		tmp3.append(tokens[1])
+		count -= 1
+	if tmp1:
+		tmp1, tmp2, tmp3 = trim(tmp1, tmp2, tmp3)
+		h.write(str(len(tmp2)) + '\n')				
+		for t1, t2, t3 in zip(tmp1, tmp2, tmp3):
+			g.write(str(t1) + '\n')
+			h.write(str(t2) + '\t' + str(t3) + '\n')
 
 def remove_unicode(s):
 	s = s.replace('\xC2\x93', '``')
@@ -128,6 +146,14 @@ def remove_unicode(s):
 	s = s.replace('\xC2\xBE', '3/4')
 	return s
 
+def same(x, y):
+	for token1, token2 in zip(x.tokens, y.tokens):
+		if token1.head != token2.head:
+			return False
+		elif token1.head == token2.head and token1.deprel != token2.deprel:
+			return False
+	return True
+
 def split_files(input, output, start, end):
 	corpus = Corpus(input)
 	f = open(output, 'w')
@@ -135,6 +161,15 @@ def split_files(input, output, start, end):
 		f.write(str(sent) + '\n')
 	f.flush()
 	f.close()
+
+def trim(dtrees, pscores, rscores):
+	x, y, z = [], [], []
+	for dtree, ps, rs in zip(dtrees, pscores, rscores):
+		if not check_duplicate_tree(x, dtree):
+			x.append(dtree)
+			y.append(ps)
+			z.append(rs)
+	return x, y, z
 
 #def main():
 	#fix_csv()
