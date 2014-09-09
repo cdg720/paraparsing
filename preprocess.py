@@ -1,6 +1,8 @@
 import csv
 import sys
+import time
 from CoNLL import Corpus
+from bllipparser import Tree
 
 def ascii(s):
 	return all(ord(c) < 128 for c in s)
@@ -52,6 +54,23 @@ def fix_csv():
 		f.flush()
 		f.close()
 
+def get_words(input, out1, out2):
+	f = open(input, 'r')
+	g = open(out1, 'w')
+	h = open(out2, 'w')
+	iter = 0
+	for line in f.read().splitlines():
+		iter += 1
+		if iter % 2 == 1:
+			g.write(' '.join(Tree(line).tokens()) + '\n')
+		else:
+			h.write(' '.join(Tree(line).tokens()) + '\n')
+	f.close()
+	g.flush()
+	g.close()
+	h.flush()
+	h.close()
+
 # def read():
 #     if len(sys.argv) != 2:
 #         print 'usage: python preprocess.py parapharses.csv'
@@ -94,8 +113,10 @@ def fix_csv():
 # 	return trees, pscores, rscores
 
 def remove_duplicates(trees, stats):
+	start = time.time()
 	corpus = Corpus(trees)
 	print len(corpus.sentences)
+	print time.time() - start
 
 def remove_unicode(s):
 	s = s.replace('\xC2\x93', '``')
@@ -107,14 +128,22 @@ def remove_unicode(s):
 	s = s.replace('\xC2\xBE', '3/4')
 	return s
 
-def main():
+def split_files(input, output, start, end):
+	corpus = Corpus(input)
+	f = open(output, 'w')
+	for sent in corpus.sentences[start-1:end*2]:
+		f.write(str(sent) + '\n')
+	f.flush()
+	f.close()
+
+#def main():
 	#fix_csv()
 	#check_unicode()
-	remove_duplicates(sys.argv[1], sys.argv[2])
+	#remove_duplicates(sys.argv[1], sys.argv[2])
 	# trees, pscores, rscores = read_nbest(sys.argv[1])
 	# for ts, ps, rs in zip(trees, pscores, rscores):
 	# 	print len(ts), len(ps), len(rs)
 
-main()
+#main()
 		
     

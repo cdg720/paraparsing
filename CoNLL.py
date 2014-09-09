@@ -1,4 +1,5 @@
 import sys
+import re
 
 class Corpus:
 	def __init__(self, file):
@@ -15,7 +16,7 @@ class Corpus:
 				tokens = []
 				continue
 			items = line.split('\t')
-			if len(items) != 10:
+			if len(items) != 8:
 				print 'Wrong Format'
 				print line
 				sys.exit(0)
@@ -33,6 +34,26 @@ class Sentence:
 		for i in xrange(self.length):
 			tmp += str(self.tokens[i].id) + '\t' + self.tokens[i].form + '\t' + self.tokens[i].lemma + '\t' + self.tokens[i].cpos + '\t' + self.tokens[i].pos + '\t' + self.tokens[i].feat + '\t' + str(self.tokens[i].head) + '\t' + self.tokens[i].deprel + '\n'
 		return tmp
+
+	def evaluate(self, gold):
+		regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
+		if self.length != gold.length:
+			print [x.form for x in self.tokens]
+			print [x.form for x in gold.tokens]
+			sys.exit(0)
+		score = [0,] * 3;
+		for token1, token2 in zip(self.tokens, gold.tokens):
+			if token1.form != token2.form:
+				print [x.form for x in self.tokens]
+				print [x.form for x in gold.tokens]
+				sys.exit(0)
+			if not regex.match(token1.form):
+				score[2] += 1
+				if token1.head == token2.head:
+					score[0] += 1
+					if token1.deprel == token2.deprel:
+						score[1] += 1
+		return score				
 
 # CoNLL 2006 English
 class Token:
