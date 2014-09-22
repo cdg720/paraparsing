@@ -30,12 +30,13 @@ class Corpus:
 
 class Sentence:
 	def __init__(self, tokens):
-		self.tokens = tokens
+		root = Token(['0','ROOT','_','_','_','_','-1','_',])
+		self.tokens = [root] + tokens
 		self.length = len(tokens)
 
 	def __str__(self):
 		tmp = ''
-		for i in xrange(self.length):
+		for i in xrange(1, self.length): # exclude ROOT
 			tmp += str(self.tokens[i].id) + '\t' + self.tokens[i].form + '\t' + self.tokens[i].lemma + '\t' + self.tokens[i].cpos + '\t' + self.tokens[i].pos + '\t' + self.tokens[i].feat + '\t' + str(self.tokens[i].head) + '\t' + self.tokens[i].deprel + '\n'
 		return tmp
 

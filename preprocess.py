@@ -78,29 +78,13 @@ def get_words(input, out1, out2):
 	h.flush()
 	h.close()
 
-# def read():
-#     if len(sys.argv) != 2:
-#         print 'usage: python preprocess.py parapharses.csv'
-#         sys.exit(0)
-#     f = open(sys.argv[1], 'r')
-#     ind = 0
-#     for line in f.read().splitlines():
-#         ind += 1
-#         words = line.split()
-#         for word in words:
-#             if not ascii(word):
-#                 print ind, word
-#         #print ' '.join(words)
-
-# read()
-
 def read_file(file):
 	if file.endswith('.gz'):
 		return gzip.open(file, 'rb')
 	else:
 		return open(file, 'r')
 
-# TODO: fix this. very inefficient
+# TODO: fix this. very inefficient. make sure there is no bug
 def remove_duplicates(trees, stats):
 	corpus = Corpus(trees)
 	f = read_file(stats)
@@ -157,10 +141,38 @@ def same(x, y):
 def split_files(input, output, start, end):
 	corpus = Corpus(input)
 	f = open(output, 'w')
-	for sent in corpus.sentences[start-1:end*2]:
+	for sent in corpus.sentences[2*(start-1):end*2]:
 		f.write(str(sent) + '\n')
 	f.flush()
 	f.close()
+
+def split_nbest_files(trees, stats, start, end):
+	corpus = Corpus(trees)
+	f = gzip.open(stats, 'rb')
+	g = gzip.open('x', 'wb')
+	h = gzip.open('y', 'wb')
+	start = 2*(start-1)
+	end = 2*end
+	it = iter(corpus.sentences)
+	count = 0
+	ind = 0
+	for line in f.read().splitlines():
+		if count == 0:
+			count = int(line)
+			ind += 1
+			if ind >= start and ind <= end:
+				h.write(str(count) + '\n')
+			continue
+		tree = next(it)
+		tokens = line.split('\t')
+		if len(tokens) != 2:
+			print 'Wrong Format'
+			print line
+			sys.exit(0)
+		if ind >= start and ind <= end:
+			g.write(str(tree) + '\n')
+			h.write(tokens[0] + '\t' + tokens[1] + '\n')
+		count -= 1	
 
 def trim(dtrees, pscores, rscores):
 	x, y, z = [], [], []
