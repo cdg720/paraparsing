@@ -18,12 +18,22 @@ def read_alignments(file):
 
 	alignments = []
 	for align in broken:
-		alignment1 = []
-		alignment2 = []		
+		len1 = len(align[1].split()) + 1
+		len2 = len(align[2].split()) + 1
+		align1 = [[-1,-1]] * len1
+		align2 = [[-1,-1]] * len2
 		for line in align[4:]:
-			tokens = line.split() # every score = 1.0. seems weird
-			# ignore aligned phrases
-			
+			tokens = line.split() # every score = 1.0. seems weird and useless
+			x = [int(tmp) for tmp in tokens[1].split(':')] # x -> y			
+			y = [int(tmp) for tmp in tokens[0].split(':')] # y -> x
+			# ignore aligned phrases			
+			if x[1] != 1 or y[1] != 1:
+				continue
+			align1[x[0]+1] = [y[0]+1, int(tokens[2])]
+			align2[y[0]+1] = [x[0]+1, int(tokens[2])]
+		alignments.append(align1)
+		alignments.append(align2)
+	return alignments
 
 def read_files(argv):
 	sents = Corpus(argv[0]).sentences
@@ -38,6 +48,7 @@ def read_files(argv):
 			if tmp1:
 				sd205.append(tmp1)
 				stats.append(tmp2)
+				tmp1, tmp2 = [], []
 			continue
 		tmp1.append(next(it))
 		tokens = line.split('\t')
@@ -57,5 +68,5 @@ def main():
 		print 'usage: python paraparse.py 50best.sd205, 50best.stats, align'
 		sys.exit(0)
 	trees, stats, align = read_files(sys.argv[1:])
-	
+
 main()
