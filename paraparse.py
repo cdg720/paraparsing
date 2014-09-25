@@ -2,6 +2,11 @@ import gzip
 import sys
 from CoNLL import Corpus
 
+def count_violations(tree1, tree2, align):
+	count = 0
+	
+	return count
+
 # 0-index: 0 ROOT
 def read_alignments(file):
 	# 0: exact, 1: stem, 2: synonym, 3: paraphrase
