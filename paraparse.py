@@ -2,10 +2,21 @@ import gzip
 import sys
 from CoNLL import Corpus
 
-def count_violations(tree1, tree2, align):
+def count_violations(tree1, tree2, align1, align2):
 	count = 0
+	print len(tree1), [x.form for x in tree1.tokens if x.head != -1]
+	print len(tree2), [x.form for x in tree2.tokens if x.head != -1]
 	
 	return count
+
+def find_best_pair(trees1, trees2, align1, align2):
+	min_violation = 1000
+	max_score = -1000
+	for t1 in trees1:
+		for t2 in trees2:
+			count_violations(t1, t2, align1, align2)
+			# put scores into tree object
+	return trees1[0], trees2[0]
 
 # 0-index: 0 ROOT
 def read_alignments(file):
@@ -73,5 +84,7 @@ def main():
 		print 'usage: python paraparse.py 50best.sd205, 50best.stats, align'
 		sys.exit(0)
 	trees, stats, align = read_files(sys.argv[1:])
+	for ts, ss, a in zip(trees, stats, aling):
+		best1, best2 = find_best_pair(ts, ss, a)
 
 main()
