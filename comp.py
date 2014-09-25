@@ -23,14 +23,17 @@ for g, b, d in zip(gold, base, dual):
 	d_scores[1] += tmp2[1]
 	d_scores[2] += tmp2[2]
 	if tmp[0] > tmp2[0]: # lose
-		board[0] += 1
-		print 'winning', i, tmp2[0] - tmp[0]		
-	elif tmp[0] < tmp2[0]: # win
 		board[2] += 1
-		print 'winning', i, tmp2[0] - tmp[0]
+		print  i, 'losing', tmp2[0] - tmp[0]		
+	elif tmp[0] < tmp2[0]: # win
+		board[0] += 1
+		print i, 'winning', tmp2[0] - tmp[0]
 	else:
 		board[1] += 1 # tie
 	i += 1
+
+print board
+print
 
 print 'base'
 print 'UAS: %d / %d * 100 = %.2f ' % (int(b_scores[0]), int(b_scores[2]), b_scores[0] / b_scores[2] * 100)

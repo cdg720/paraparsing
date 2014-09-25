@@ -7,9 +7,36 @@ def add_scores(score1, score2): # natural log base
 
 def count_violations(tree1, tree2, align1, align2):
 	count = 0
-	print len(tree1), [x.form for x in tree1.tokens if x.head != -1]
-	print len(tree2), [x.form for x in tree2.tokens if x.head != -1]
-	
+	x = 0
+	for i in xrange(1, len(tree1)):
+		if align1[i][0] == -1: # ith word not aligned
+			continue
+		head1 = tree1.tokens[i].head
+		if align1[head1][0] == -1: # ith word's head not aligned
+			continue
+		twin = align1[i][0]
+		head2 = tree2.tokens[twin].head
+		if align2[head2][0] == -1: #
+			#continue
+			count += 1
+		if align1[head1][0] != head2:
+			count += 1
+			x += 1
+	y = 0
+	for i in xrange(1, len(tree2)):
+		if align2[i][0] == -1:
+			continue
+		head2 = tree2.tokens[i].head
+		if align2[head2][0] == -1:
+			continue
+		twin = align2[i][0]
+		head1 = tree1.tokens[twin].head
+		if align1[head1][0] == -1:
+			#continue
+			count += 1
+		if align2[head2][0] != head1:
+			count += 1
+			y += 1
 	return count
 
 def find_best_pair(trees1, trees2, align1, align2):
@@ -96,5 +123,7 @@ def main():
 	trees1, trees2, align1, align2 = read_files(sys.argv[1:])
 	for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
 		best = find_best_pair(ts1, ts2, a1, a2)
+		print best[0]
+		print best[1]
 
 main()
