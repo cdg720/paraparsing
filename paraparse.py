@@ -2,6 +2,9 @@ import gzip
 import sys
 from CoNLL import Corpus
 
+def add_scores(score1, score2): # natural log base
+	return score1 + score2
+
 def count_violations(tree1, tree2, align1, align2):
 	count = 0
 	print len(tree1), [x.form for x in tree1.tokens if x.head != -1]
@@ -10,13 +13,21 @@ def count_violations(tree1, tree2, align1, align2):
 	return count
 
 def find_best_pair(trees1, trees2, align1, align2):
+	args = [None, None]
 	min_violation = 1000
 	max_score = -1000
 	for t1 in trees1:
 		for t2 in trees2:
-			count_violations(t1, t2, align1, align2)
-			# put scores into tree object
-	return trees1[0], trees2[0]
+			c = count_violations(t1, t2, align1, align2)
+			score = add_scores(t1.score, t2.score)
+			if c < min_violation:
+				args = [t1, t2]
+				min_violation = c
+				max_score = score
+			elif c == min_violation and score > max_score:
+				args = [t1, t2]
+				max_score = score				
+	return args
 
 # 0-index: 0 ROOT
 def read_alignments(file):
@@ -56,15 +67,13 @@ def read_files(argv):
 	lines = gzip.open(argv[1]).read().splitlines()
 	it = iter(sents)
 	count = 0
-	sd205, stats = [], []
-	tmp1, tmp2 = [], []
+	sd205, tmp1 = [], []
 	for line in lines:
 		if count == 0:
 			count = int(line)
 			if tmp1:
 				sd205.append(tmp1)
-				stats.append(tmp2)
-				tmp1, tmp2 = [], []
+				tmp1 = []
 			continue
 		tmp1.append(next(it))
 		tokens = line.split('\t')
@@ -72,19 +81,20 @@ def read_files(argv):
 			print 'Wrong Format'
 			print line
 			sys.exit(0)
-		tmp2.append(float(tokens[1])) # only use reranker score
+		tmp1[-1].score = float(tokens[1])
 		count -= 1
 	if tmp1:
 		sd205.append(tmp1)
-		stats.append(tmp2)
-	return sd205, stats, read_alignments(argv[2])
+	#return sd205, read_alignments(argv[2])
+	align = read_alignments(argv[2])
+	return sd205[::2], sd205[1::2], align[::2], align[1::2]
 
 def main():
 	if len(sys.argv) != 4:
 		print 'usage: python paraparse.py 50best.sd205, 50best.stats, align'
 		sys.exit(0)
-	trees, stats, align = read_files(sys.argv[1:])
-	for ts, ss, a in zip(trees, stats, aling):
-		best1, best2 = find_best_pair(ts, ss, a)
+	trees1, trees2, align1, align2 = read_files(sys.argv[1:])
+	for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
+		best = find_best_pair(ts1, ts2, a1, a2)
 
 main()

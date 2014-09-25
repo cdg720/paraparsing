@@ -32,17 +32,20 @@ class Sentence:
 	def __init__(self, tokens):
 		root = Token(['0','ROOT','_','_','_','_','-1','_',])
 		self.tokens = [root] + tokens
-		self.length = len(tokens)
+		self.score = None
+
+	def __len__(self):
+		return len(self.tokens)
 
 	def __str__(self):
 		tmp = ''
-		for i in xrange(1, self.length): # exclude ROOT
+		for i in xrange(1, len(self)): # exclude ROOT
 			tmp += str(self.tokens[i].id) + '\t' + self.tokens[i].form + '\t' + self.tokens[i].lemma + '\t' + self.tokens[i].cpos + '\t' + self.tokens[i].pos + '\t' + self.tokens[i].feat + '\t' + str(self.tokens[i].head) + '\t' + self.tokens[i].deprel + '\n'
 		return tmp
 
 	def evaluate(self, gold):
 		regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
-		if self.length != gold.length:
+		if len(self) != len(gold):
 			print [x.form for x in self.tokens]
 			print [x.form for x in gold.tokens]
 			sys.exit(0)
