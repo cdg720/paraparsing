@@ -12,7 +12,8 @@ import sys
 def get_classifier(cl=0):
 	if cl == 0:
 		print >> sys.stderr, 'AdaBoostClassifier'
-		return AdaBoostClassifier()
+		#return AdaBoostClassifier()
+		return AdaBoostClassifier(n_estimators=30, algorithm='SAMME')	
 	elif cl == 1:
 		print >> sys.stderr, 'LogisticRegression'
 		#return LogisticRegression()
