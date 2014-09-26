@@ -11,13 +11,17 @@ import sys
 
 def get_classifier(cl=0):
 	if cl == 0:
+		print >> sys.stderr, 'AdaBoostClassifier'
 		return AdaBoostClassifier()
 	elif cl == 1:
-		return LogisticRegression()
+		print >> sys.stderr, 'LogisticRegression'
+		#return LogisticRegression()
+		return LogisticRegression(penalty='l1', C=1.0)	
 	elif cl == 2:
+		print >> sys.stderr, 'LinearSVC'
 		return LinearSVC()
 	else:
-		print 'invalid classifier'
+		print >> sys.stderr, 'invalid classifier'
 		return None
 
 def get_features(base, dual):
@@ -97,8 +101,10 @@ def main():
 
 	X, y, indices = preprocess(gold, base, dual)
 	loo = LeaveOneOut(len(y))
+	correct = 0
+	cl = get_classifier(1)
+	out = []
 	for train_indices, test_index in loo:
-		cl = get_classifier()		
 		X_train, X_test = X[train_indices], X[test_index]
 		y_train, y_test = y[train_indices], y[test_index]
 		try:
@@ -106,7 +112,22 @@ def main():
 		except:
 			cl.fit(X_train, y_train)
 		y_pred = cl.predict(X_test)
-
-	
+		out.append(y_pred[0])			
+		if y_pred == y_test:
+			correct += 1
+	count = 0
+	for ind in xrange(len(base)):
+		if ind not in indices:
+			print base[ind][0]
+			print base[ind][1]
+		else:
+			if out[count] == -1:
+				print base[ind][0]
+				print base[ind][1]
+			else:
+				print dual[ind][0]
+				print dual[ind][1]
+			count += 1
+	print >> sys.stderr, 'accuracy: %.2f' % (100. * correct / len(y))
 
 main()
