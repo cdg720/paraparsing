@@ -36,7 +36,7 @@ else:
 	print 'wrong'
 	sys.exit(0)
 
-mode = 2 # 0: gold, 1: 1best, 2: nbest
+mode = 0 # 0: gold, 1: 1best, 2: nbest
 f = open('tmp/output', 'w')
 if mode == 2:
 	g = open('tmp/scores', 'w')
@@ -54,7 +54,6 @@ with open(path, 'rb') as csvfile:
 			elif mode == 2:
 				words = Tree(row[2]).tokens()
 				nbest_list = nbest(words)
-				#nbest_list = nbest(row[3])
 				g.write(str(len(nbest_list)) + '\n')
 				for tree in nbest_list:
 					f.write(str(tree.ptb_parse) + '\n')

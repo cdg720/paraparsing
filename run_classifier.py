@@ -13,28 +13,39 @@ def get_classifier(cl=0):
 	if cl == 0:
 		print >> sys.stderr, 'AdaBoostClassifier'
 		#return AdaBoostClassifier()
-		return AdaBoostClassifier(n_estimators=30, algorithm='SAMME')	
+		return AdaBoostClassifier(n_estimators=25, algorithm='SAMME', learning_rate=1.0)	
 	elif cl == 1:
 		print >> sys.stderr, 'LogisticRegression'
 		#return LogisticRegression()
-		return LogisticRegression(penalty='l1', C=1.0)	
+		#return LogisticRegression(penalty='l2', C=0.1)
+		return LogisticRegression(penalty='l1', C=0.65)	
 	elif cl == 2:
 		print >> sys.stderr, 'LinearSVC'
-		return LinearSVC()
+		return LinearSVC(penalty='l1', dual=False, C=0.15)
+		#return LinearSVC(loss='l1')	
 	else:
 		print >> sys.stderr, 'invalid classifier'
 		return None
 
+# make sure the following method is correct
 def get_features(base, dual):
 	feats = {}
 	for i in xrange(1, len(base)):
+		pos = base.tokens[i].pos
 		lb = base.tokens[i].deprel
 		pos_lb = base.tokens[i].pos + ' ' + lb
-		if lb in feats:
-			if feats[lb] == 1:
-				feats[lb] = 0
+		if pos in feats:
+			if feats[pos] == 1:
+				feats[pos] = 0
 		else:
-			feats[lb] = -1
+			feats[pos] = -1
+
+		# if lb in feats:
+		# 	if feats[lb] == 1:
+		# 		feats[lb] = 0
+		# else:
+		# 	feats[lb] = -1
+
 		if pos_lb in feats:
 			if feats[pos_lb] == 1:
 				feats[pos_lb] = 0
@@ -65,6 +76,7 @@ def preprocess(gold, base, dual):
 		b_score = b[0].evaluate(g[0])
 		d_score = d[0].evaluate(g[0])
 		# use UAS
+		#if b_score[0] > d_score[0] or (b_score[0] == d_score[0] and b_score[1] > d_score[1]):
 		if b_score[0] > d_score[0]:
 			y.append(-1)
 			feats = get_features(b[0], d[0])
@@ -72,6 +84,7 @@ def preprocess(gold, base, dual):
 				if v != 0 and f not in feat2ind:
 					feat2ind[f] = len(feat2ind)
 			indices.append(ind)
+		#elif b_score[0] < d_score[0] or (b_score[0] == d_score[0] and b_score[1] < d_score[1]):
 		elif b_score[0] < d_score[0]:
 			y.append(1)
 			feats = get_features(b[0], d[0])
@@ -90,8 +103,8 @@ def preprocess(gold, base, dual):
 	return np.array(X), np.array(y), indices
 
 def main():
-	if len(sys.argv) != 4:
-		print 'python run_classifier.py gold base dual'
+	if len(sys.argv) < 4:
+		print 'python run_classifier.py gold base dual (out)'
 		sys.exit(0)
 	tmp = Corpus(sys.argv[1]).sentences
 	gold = [[x, y] for x, y in zip(tmp[::2], tmp[1::2])]
@@ -103,7 +116,7 @@ def main():
 	X, y, indices = preprocess(gold, base, dual)
 	loo = LeaveOneOut(len(y))
 	correct = 0
-	cl = get_classifier(1)
+	cl = get_classifier(2)
 	out = []
 	for train_indices, test_index in loo:
 		X_train, X_test = X[train_indices], X[test_index]
@@ -117,18 +130,19 @@ def main():
 		if y_pred == y_test:
 			correct += 1
 	count = 0
-	for ind in xrange(len(base)):
-		if ind not in indices:
-			print base[ind][0]
-			print base[ind][1]
-		else:
-			if out[count] == -1:
+	if len(sys.argv) == 5:
+		for ind in xrange(len(base)):
+			if ind not in indices:
 				print base[ind][0]
 				print base[ind][1]
 			else:
-				print dual[ind][0]
-				print dual[ind][1]
-			count += 1
+				if out[count] == -1:
+					print base[ind][0]
+					print base[ind][1]
+				else:
+					print dual[ind][0]
+					print dual[ind][1]
+				count += 1
 	print >> sys.stderr, 'accuracy: %.2f' % (100. * correct / len(y))
 
 main()

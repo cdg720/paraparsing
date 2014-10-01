@@ -30,7 +30,7 @@ class Corpus:
 
 class Sentence:
 	def __init__(self, tokens):
-		root = Token(['0','ROOT','_','_','_','_','-1','_',])
+		root = Token(['0','ROOT','_','_','_','_','-1','_','_','_'])
 		self.tokens = [root] + tokens
 		self.score = None
 
@@ -40,7 +40,7 @@ class Sentence:
 	def __str__(self):
 		tmp = ''
 		for i in xrange(1, len(self)): # exclude ROOT
-			tmp += str(self.tokens[i].id) + '\t' + self.tokens[i].form + '\t' + self.tokens[i].lemma + '\t' + self.tokens[i].cpos + '\t' + self.tokens[i].pos + '\t' + self.tokens[i].feat + '\t' + str(self.tokens[i].head) + '\t' + self.tokens[i].deprel + '\n'
+			tmp += str(self.tokens[i].id) + '\t' + self.tokens[i].form + '\t' + self.tokens[i].lemma + '\t' + self.tokens[i].cpos + '\t' + self.tokens[i].pos + '\t' + self.tokens[i].feat + '\t' + str(self.tokens[i].head) + '\t' + self.tokens[i].deprel + '\t_\t_\n'
 		return tmp
 
 	def evaluate(self, gold):

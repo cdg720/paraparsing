@@ -151,7 +151,7 @@ def split_nbest_files(trees, stats, start, end):
 	f = gzip.open(stats, 'rb')
 	g = gzip.open('x', 'wb')
 	h = gzip.open('y', 'wb')
-	start = 2*(start-1)
+	start = 2*(start-1) # 1-index
 	end = 2*end
 	it = iter(corpus.sentences)
 	count = 0
@@ -183,14 +183,15 @@ def trim(dtrees, pscores, rscores):
 			z.append(rs)
 	return x, y, z
 
-#def main():
-	#fix_csv()
-	#check_unicode()
-	#remove_duplicates(sys.argv[1], sys.argv[2])
+def main():
+	# fix_csv() # get rid of unicode in .csv files
+	# check_unicode() # check if .csv file contains any unicode
+	# remove_duplicates(sys.argv[1], sys.argv[2]) # remove duplicates in 50best.sd205
 	# trees, pscores, rscores = read_nbest(sys.argv[1])
 	# for ts, ps, rs in zip(trees, pscores, rscores):
 	# 	print len(ts), len(ps), len(rs)
+	# split_nbest_files(sys.argv[1], sys.argv[2], 1, 687) # get dev1/ data  
 
-#main()
+main()
 		
     

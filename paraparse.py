@@ -1,9 +1,14 @@
 import gzip
+import math
 import sys
 from CoNLL import Corpus
 
 def add_scores(score1, score2): # natural log base
-	return score1 + score2
+	#return score1 + score2 # mutiplication of scores given that scores are logs
+	if score1 > score2:
+		return score2 + math.log(1 + math.exp(score1 - score2))
+	else:
+		return score1 + math.log(1 + math.exp(score2 - score1))
 
 def count_violations(tree1, tree2, align1, align2):
 	count = 0
@@ -121,9 +126,14 @@ def main():
 		print 'usage: python paraparse.py 50best.sd205, 50best.stats, align'
 		sys.exit(0)
 	trees1, trees2, align1, align2 = read_files(sys.argv[1:])
+	# output pairs that satisfy most contraints and have highest scores
 	for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
 		best = find_best_pair(ts1, ts2, a1, a2)
 		print best[0]
 		print best[1]
+	# output 1best parse
+	# for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
+	# 	print ts1[0]
+	# 	print ts2[0]
 
 main()
