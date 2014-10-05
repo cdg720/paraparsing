@@ -10,9 +10,8 @@ def add_scores(score1, score2): # natural log base
 	else:
 		return score1 + math.log(1 + math.exp(score2 - score1))
 
-def count_violations(tree1, tree2, align1, align2):
+def count_violations(tree1, tree2, align1, align2, label=False):
 	count = 0
-	x = 0
 	for i in xrange(1, len(tree1)):
 		if align1[i][0] == -1: # ith word not aligned
 			continue
@@ -26,8 +25,9 @@ def count_violations(tree1, tree2, align1, align2):
 			count += 1
 		if align1[head1][0] != head2:
 			count += 1
-			x += 1
-	y = 0
+		elif tree1.tokens[i].deprel != tree2.tokens[twin].deprel:
+			count += 0.5
+			
 	for i in xrange(1, len(tree2)):
 		if align2[i][0] == -1:
 			continue
@@ -41,7 +41,8 @@ def count_violations(tree1, tree2, align1, align2):
 			count += 1
 		if align2[head2][0] != head1:
 			count += 1
-			y += 1
+		elif tree2.tokens[i].deprel != tree1.tokens[twin].deprel:
+			count += 0.5
 	return count
 
 def find_best_pair(trees1, trees2, align1, align2):
@@ -50,7 +51,7 @@ def find_best_pair(trees1, trees2, align1, align2):
 	max_score = -1000
 	for t1 in trees1:
 		for t2 in trees2:
-			c = count_violations(t1, t2, align1, align2)
+			c = count_violations(t1, t2, align1, align2, label=True) # doesn't care about labels
 			score = add_scores(t1.score, t2.score)
 			if c < min_violation:
 				args = [t1, t2]
@@ -58,7 +59,7 @@ def find_best_pair(trees1, trees2, align1, align2):
 				max_score = score
 			elif c == min_violation and score > max_score:
 				args = [t1, t2]
-				max_score = score				
+				max_score = score
 	return args
 
 # 0-index: 0 ROOT
@@ -85,10 +86,10 @@ def read_alignments(file):
 			tokens = line.split() # every score = 1.0. seems weird and useless
 			x = [int(tmp) for tmp in tokens[1].split(':')] # x -> y			
 			y = [int(tmp) for tmp in tokens[0].split(':')] # y -> x
-			# ignore aligned phrases			
+			# ignore aligned phrases (more than one word)
 			if x[1] != 1 or y[1] != 1:
 				continue
-			align1[x[0]+1] = [y[0]+1, int(tokens[2])]
+			align1[x[0]+1] = [y[0]+1, int(tokens[2])] # add one. ROOT is 0th word.
 			align2[y[0]+1] = [x[0]+1, int(tokens[2])]
 		alignments.append(align1)
 		alignments.append(align2)
@@ -117,7 +118,6 @@ def read_files(argv):
 		count -= 1
 	if tmp1:
 		sd205.append(tmp1)
-	#return sd205, read_alignments(argv[2])
 	align = read_alignments(argv[2])
 	return sd205[::2], sd205[1::2], align[::2], align[1::2]
 
@@ -131,6 +131,7 @@ def main():
 		best = find_best_pair(ts1, ts2, a1, a2)
 		print best[0]
 		print best[1]
+
 	# output 1best parse
 	# for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
 	# 	print ts1[0]

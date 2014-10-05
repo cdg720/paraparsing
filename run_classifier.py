@@ -17,7 +17,7 @@ def get_classifier(cl=0):
 	elif cl == 1:
 		print >> sys.stderr, 'LogisticRegression'
 		#return LogisticRegression()
-		#return LogisticRegression(penalty='l2', C=0.1)
+		#return LogisticRegression(penalty='l1', C=.6)
 		return LogisticRegression(penalty='l1', C=0.65)	
 	elif cl == 2:
 		print >> sys.stderr, 'LinearSVC'
@@ -116,7 +116,7 @@ def main():
 	X, y, indices = preprocess(gold, base, dual)
 	loo = LeaveOneOut(len(y))
 	correct = 0
-	cl = get_classifier(2)
+	cl = get_classifier(1)
 	out = []
 	for train_indices, test_index in loo:
 		X_train, X_test = X[train_indices], X[test_index]
@@ -129,20 +129,38 @@ def main():
 		out.append(y_pred[0])			
 		if y_pred == y_test:
 			correct += 1
+
 	count = 0
-	if len(sys.argv) == 5:
-		for ind in xrange(len(base)):
-			if ind not in indices:
+	gain, loss = 0, 0
+	gains = [0,] * 10
+	losses = [0,] * 10
+	for ind in xrange(len(base)):
+		if ind not in indices:
+			if len(sys.argv) == 5:
 				print base[ind][0]
 				print base[ind][1]
-			else:
-				if out[count] == -1:
+		else: # base and dual parses have different scores
+			val1 = base[ind][0].evaluate(gold[ind][0])
+			val2 = dual[ind][0].evaluate(gold[ind][0])
+			if out[count] == -1: # base parser
+				if len(sys.argv) == 5:
 					print base[ind][0]
 					print base[ind][1]
+			else: # dual parser
+				if val1[0] > val2[0]:
+					loss += val2[0] - val1[0]
+					losses[val1[0] - val2[0] - 1] += 1
 				else:
+					gain += val2[0] - val1[0]
+					gains[val2[0] -val1[0] - 1] += 1
+				if len(sys.argv) == 5:				
 					print dual[ind][0]
 					print dual[ind][1]
-				count += 1
-	print >> sys.stderr, 'accuracy: %.2f' % (100. * correct / len(y))
+			count += 1
+	print >> sys.stderr, 'bin\t' + '\t'.join(str(x) for x in range(1,11))
+	print >> sys.stderr, 'gain\t' + '\t'.join(str(x) for x in gains)
+	print >> sys.stderr, 'loss\t' + '\t'.join(str(x) for x in losses)
+	print >> sys.stderr, 'total gain:', gain + loss
+	print >> sys.stderr, 'accuracy: %.2f (%d / %d)' % (100. * correct / len(y), correct, len(y))
 
 main()
