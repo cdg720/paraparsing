@@ -10,6 +10,7 @@ def add_scores(score1, score2): # natural log base
 	else:
 		return score1 + math.log(1 + math.exp(score2 - score1))
 
+# this function is arbitrary
 def count_violations(tree1, tree2, align1, align2, label=False):
 	count = 0
 	for i in xrange(1, len(tree1)):

@@ -3,6 +3,7 @@ from CoNLL import Corpus
 
 if len(sys.argv) != 3:
 	print 'usage: python eval.py gold pred'
+	print 'e.g.: python eval.py ../data/dev1/gold.sd205 ../data/dev1/dual3.logit2'
 	sys.exit(0)
 
 gold = Corpus(sys.argv[1]).sentences[::2]

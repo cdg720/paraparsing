@@ -6,6 +6,8 @@ from sklearn.svm import LinearSVC
 
 from sklearn.cross_validation import LeaveOneOut
 
+from collections import Counter
+
 import numpy as np
 import sys
 
@@ -18,10 +20,14 @@ def get_classifier(cl=0):
 		print >> sys.stderr, 'LogisticRegression'
 		#return LogisticRegression()
 		#return LogisticRegression(penalty='l1', C=.6)
-		return LogisticRegression(penalty='l1', C=0.65)	# works best with dual3
+		#return LogisticRegression(penalty='l1', C=0.65)	# works best with dual3
+		#return LogisticRegression(penalty='l1', C=1.5)
+		return LogisticRegression(penalty='l1', C=2.0) # lb, cpos: 58
 	elif cl == 2:
 		print >> sys.stderr, 'LinearSVC'
-		return LinearSVC(penalty='l1', dual=False, C=0.15)
+		#return LinearSVC(penalty='l1', dual=False, C=0.15)
+		return LinearSVC(penalty='l1', dual=False, C=0.7) # lb: 60
+		#return LinearSVC(penalty='l1', dual=False, C=0.7)
 		#return LinearSVC(loss='l1')	
 	else:
 		print >> sys.stderr, 'invalid classifier'
@@ -30,41 +36,32 @@ def get_classifier(cl=0):
 # make sure the following method is correct
 def get_features(base, dual):
 	feats = {}
-	for i in xrange(1, len(base)):
-		pos = base.tokens[i].pos
-		lb = base.tokens[i].deprel
-		pos_lb = base.tokens[i].pos + ' ' + lb
-		if pos in feats:
-			if feats[pos] == 1:
-				feats[pos] = 0
-		else:
-			feats[pos] = -1
+	for dp, sign in zip([base, dual], [-1, 1]):
+		for i in xrange(1, len(dp)):
+			pos = dp.tokens[i].pos
+			cpos = pos[:2]
+			lb = dp.tokens[i].deprel
+			pos_lb = pos + ' ' + lb
+			cpos_lb = cpos + ' ' + lb
+			if dp.tokens[i].head != -1:
+				p_lb = 'p' + dp.tokens[dp.tokens[i].head].deprel
+			else:
+				p_lb = 'pROOT'
 
-		# if lb in feats:
-		# 	if feats[lb] == 1:
-		# 		feats[lb] = 0
-		# else:
-		# 	feats[lb] = -1
-
-		if pos_lb in feats:
-			if feats[pos_lb] == 1:
-				feats[pos_lb] = 0
-		else:
-			feats[pos_lb] = -1
-
-	for i in xrange(1, len(dual)):
-		lb = dual.tokens[i].deprel
-		pos_lb = dual.tokens[i].pos + ' ' + lb
-		if lb in feats:
-			if feats[lb] == -1:
-				feats[lb] = 0
-		else:
-			feats[lb] = 1
-		if pos_lb in feats:
-			if feats[pos_lb] == -1:
-				feats[pos_lb] = 0
-		else:
-			feats[pos_lb] = 1
+			features = [lb,
+									#lb + p_lb,
+									#cpos,
+									#cpos_lb,
+									#pos,
+									#pos_lb,
+									]
+			for feature in features:
+				if feature in feats:
+					if feats[feature] == sign * -1:
+						feats[feature] = 0
+				else:
+					feats[feature] = sign
+					
 	return feats				
 
 def preprocess(gold, base, dual):
@@ -116,7 +113,7 @@ def main():
 	X, y, indices = preprocess(gold, base, dual)
 	loo = LeaveOneOut(len(y))
 	correct = 0
-	cl = get_classifier(1)
+	cl = get_classifier(2)
 	out = []
 	for train_indices, test_index in loo:
 		X_train, X_test = X[train_indices], X[test_index]
@@ -158,9 +155,11 @@ def main():
 					print dual[ind][1]
 			count += 1
 	print >> sys.stderr, 'bin\t' + '\t'.join(str(x) for x in range(1,11))
-	print >> sys.stderr, 'gain\t' + '\t'.join(str(x) for x in gains)
-	print >> sys.stderr, 'loss\t' + '\t'.join(str(x) for x in losses)
-	print >> sys.stderr, 'total gain:', gain + loss
-	print >> sys.stderr, 'accuracy: %.2f (%d / %d)' % (100. * correct / len(y), correct, len(y))
+	print >> sys.stderr, 'g ' + str(sum(gains)) + '\t' + '\t'.join(str(x) for x in gains)
+	print >> sys.stderr, 'l ' + str(sum(losses)) + '\t' + '\t'.join(str(x) for x in losses)
+	print >> sys.stderr, 'total gain: %d' % (gain + loss)
+	print >> sys.stderr, 'classifier accuracy: %.2f (%d / %d)' % (100. * correct / len(y), correct, len(y))
+	baseline = Counter(y)[-1]
+	print >> sys.stderr, 'majority accuracy: %.2f (%d / %d)' % (100. * baseline / len(y), baseline, len(y))	
 
 main()
