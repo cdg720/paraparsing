@@ -18,7 +18,7 @@ def get_classifier(cl=0):
 		print >> sys.stderr, 'LogisticRegression'
 		#return LogisticRegression()
 		#return LogisticRegression(penalty='l1', C=.6)
-		return LogisticRegression(penalty='l1', C=0.65)	
+		return LogisticRegression(penalty='l1', C=0.65)	# works best with dual3
 	elif cl == 2:
 		print >> sys.stderr, 'LinearSVC'
 		return LinearSVC(penalty='l1', dual=False, C=0.15)

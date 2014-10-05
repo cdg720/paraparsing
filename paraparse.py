@@ -25,8 +25,8 @@ def count_violations(tree1, tree2, align1, align2, label=False):
 			count += 1
 		if align1[head1][0] != head2:
 			count += 1
-		elif tree1.tokens[i].deprel != tree2.tokens[twin].deprel:
-			count += 0.5
+		# elif tree1.tokens[i].deprel != tree2.tokens[twin].deprel:
+		# 	count += 1
 			
 	for i in xrange(1, len(tree2)):
 		if align2[i][0] == -1:
@@ -41,8 +41,8 @@ def count_violations(tree1, tree2, align1, align2, label=False):
 			count += 1
 		if align2[head2][0] != head1:
 			count += 1
-		elif tree2.tokens[i].deprel != tree1.tokens[twin].deprel:
-			count += 0.5
+		# elif tree2.tokens[i].deprel != tree1.tokens[twin].deprel:
+		# 	count += 1
 	return count
 
 def find_best_pair(trees1, trees2, align1, align2):
