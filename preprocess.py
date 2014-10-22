@@ -190,7 +190,8 @@ def main():
 	# trees, pscores, rscores = read_nbest(sys.argv[1])
 	# for ts, ps, rs in zip(trees, pscores, rscores):
 	# 	print len(ts), len(ps), len(rs)
-	# split_nbest_files(sys.argv[1], sys.argv[2], 1, 687) # get dev1/ data  
+	# split_nbest_files(sys.argv[1], sys.argv[2], 1, 687) # get dev1/ data
+	#split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
 
 main()
 		

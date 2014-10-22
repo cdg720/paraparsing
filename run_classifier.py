@@ -116,8 +116,13 @@ def main():
 	cl = get_classifier(2)
 	out = []
 	for train_indices, test_index in loo:
+		# make sure train/test split is disjoint
 		X_train, X_test = X[train_indices], X[test_index]
 		y_train, y_test = y[train_indices], y[test_index]
+
+		# cheating
+		# X_train, X_test = X, X[test_index]
+		# y_train, y_test = y, y[test_index]
 		try:
 			cl.fit_transform(X_train, y_train)
 		except:
