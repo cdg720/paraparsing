@@ -45,6 +45,8 @@ class Sentence:
 
 	def evaluate(self, gold):
 		regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
+		#etc = ['-LRB-', '-RRB-', '``']
+		etc = []
 		if len(self) != len(gold):
 			print [x.form for x in self.tokens]
 			print [x.form for x in gold.tokens]
@@ -57,7 +59,7 @@ class Sentence:
 				print [x.form for x in self.tokens]
 				print [x.form for x in gold.tokens]
 				sys.exit(0)
-			if not regex.match(token1.form):
+			if not regex.match(token1.form) and token1.form not in etc:
 				score[2] += 1
 				if token1.head == token2.head:
 					score[0] += 1

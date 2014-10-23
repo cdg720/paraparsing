@@ -1,7 +1,7 @@
 from CoNLL import Corpus
 
 from sklearn.ensemble import AdaBoostClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Lasso
 from sklearn.svm import LinearSVC
 
 from sklearn.cross_validation import LeaveOneOut
@@ -11,6 +11,9 @@ from collections import Counter
 import numpy as np
 import sys
 
+import paraparse
+
+which = 1
 def get_classifier(cl=0):
 	if cl == 0:
 		print >> sys.stderr, 'AdaBoostClassifier'
@@ -18,17 +21,19 @@ def get_classifier(cl=0):
 		return AdaBoostClassifier(n_estimators=25, algorithm='SAMME', learning_rate=1.0)	
 	elif cl == 1:
 		print >> sys.stderr, 'LogisticRegression'
-		#return LogisticRegression()
-		#return LogisticRegression(penalty='l1', C=.6)
+		#return LogisticRegression(C=3.0)
+		return LogisticRegression(penalty='l1', C=1)
 		#return LogisticRegression(penalty='l1', C=0.65)	# works best with dual3
-		#return LogisticRegression(penalty='l1', C=1.5)
-		return LogisticRegression(penalty='l1', C=2.0) # lb, cpos: 58
+		#return LogisticRegression(penalty='l1', C=2.9)
+		#return LogisticRegression(penalty='l1', C=2.0) # lb, cpos: 58
 	elif cl == 2:
 		print >> sys.stderr, 'LinearSVC'
-		#return LinearSVC(penalty='l1', dual=False, C=0.15)
-		return LinearSVC(penalty='l1', dual=False, C=0.7) # lb: 60
-		#return LinearSVC(penalty='l1', dual=False, C=0.7)
-		#return LinearSVC(loss='l1')	
+		return LinearSVC(penalty='l1', dual=False, C=1.5)
+		#return LinearSVC(penalty='l1', dual=False, C=0.7) # lb: 60
+		#return LinearSVC(penalty='l1', dual=False, C=1.0)
+		#return LinearSVC(loss='l1')
+	# elif cl == 3:
+	# 	return Lasso() # return some real number.
 	else:
 		print >> sys.stderr, 'invalid classifier'
 		return None
@@ -48,12 +53,12 @@ def get_features(base, dual):
 			else:
 				p_lb = 'pROOT'
 
-			features = [lb,
-									#lb + p_lb,
-									#cpos,
-									#cpos_lb,
-									#pos,
-									#pos_lb,
+			features = [#lb, 
+									#lb + p_lb, 
+									cpos, 
+									cpos_lb, 
+									pos, 
+									#pos_lb, 
 									]
 			for feature in features:
 				if feature in feats:
@@ -64,7 +69,7 @@ def get_features(base, dual):
 					
 	return feats				
 
-def preprocess(gold, base, dual):
+def preprocess(gold, base, dual, align):
 	indices = []
 	feat2ind = {}
 	X, y = [], []
@@ -92,7 +97,12 @@ def preprocess(gold, base, dual):
 		ind += 1
 	for ind in indices:
 		feats = get_features(base[ind][0], dual[ind][0])
-		x = [0,] * len(feat2ind)
+		vio1 = paraparse.count_violations(base[ind][0], base[ind][1], align[ind][0], align[ind][1])
+		vio2 = paraparse.count_violations(dual[ind][0], dual[ind][1], align[ind][0], align[ind][1])
+		x = [0,] * (len(feat2ind) + 3)
+		x[-3] = vio1 - vio2
+		x[-1] = paraparse.add_scores(base[ind][0].score, base[ind][1].score)
+		x[-2] = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)		
 		for f, v in feats.iteritems():
 			if v != 0:
 				x[feat2ind[f]] = v
@@ -100,20 +110,34 @@ def preprocess(gold, base, dual):
 	return np.array(X), np.array(y), indices
 
 def main():
-	if len(sys.argv) < 4:
-		print 'python run_classifier.py gold base dual (out)'
+	if len(sys.argv) < 7:
+		print 'python run_classifier.py gold base dual align base.stats dual.stats (out)'
 		sys.exit(0)
 	tmp = Corpus(sys.argv[1]).sentences
 	gold = [[x, y] for x, y in zip(tmp[::2], tmp[1::2])]
 	tmp = Corpus(sys.argv[2]).sentences
-	base = [[x, y] for x, y in zip(tmp[::2], tmp[1::2])]	
+	base = [[x, y] for x, y in zip(tmp[::2], tmp[1::2])]
 	tmp = Corpus(sys.argv[3]).sentences
 	dual = [[x, y] for x, y in zip(tmp[::2], tmp[1::2])]
+	tmp = paraparse.read_alignments(sys.argv[4])
+	align = [[x, y] for x, y in zip(tmp[::2], tmp[1::2])]
 
-	X, y, indices = preprocess(gold, base, dual)
+	tmp = open(sys.argv[5], 'r').read().splitlines()
+	base_stats = [[float(x), float(y)] for x, y in zip(tmp[::2], tmp[1::2])]
+	tmp = open(sys.argv[6], 'r').read().splitlines()	
+	dual_stats = [[float(x), float(y)] for x, y in zip(tmp[::2], tmp[1::2])]
+	for trees, stats in zip(base, base_stats):
+		trees[0].score = stats[0]
+		trees[1].score = stats[1]
+
+	for trees, stats in zip(dual, dual_stats):
+		trees[0].score = stats[0]
+		trees[1].score = stats[1]
+
+	X, y, indices = preprocess(gold, base, dual, align)
 	loo = LeaveOneOut(len(y))
 	correct = 0
-	cl = get_classifier(2)
+	cl = get_classifier(which)
 	out = []
 	for train_indices, test_index in loo:
 		# make sure train/test split is disjoint
@@ -121,6 +145,7 @@ def main():
 		y_train, y_test = y[train_indices], y[test_index]
 
 		# cheating
+		# print >> sys.stderr, 'cheating!!'
 		# X_train, X_test = X, X[test_index]
 		# y_train, y_test = y, y[test_index]
 		try:
@@ -128,7 +153,7 @@ def main():
 		except:
 			cl.fit(X_train, y_train)
 		y_pred = cl.predict(X_test)
-		out.append(y_pred[0])			
+		out.append(y_pred[0])
 		if y_pred == y_test:
 			correct += 1
 
@@ -138,14 +163,14 @@ def main():
 	losses = [0,] * 10
 	for ind in xrange(len(base)):
 		if ind not in indices:
-			if len(sys.argv) == 5:
+			if len(sys.argv) == 8:
 				print base[ind][0]
 				print base[ind][1]
 		else: # base and dual parses have different scores
 			val1 = base[ind][0].evaluate(gold[ind][0])
 			val2 = dual[ind][0].evaluate(gold[ind][0])
 			if out[count] == -1: # base parser
-				if len(sys.argv) == 5:
+				if len(sys.argv) == 8:
 					print base[ind][0]
 					print base[ind][1]
 			else: # dual parser
@@ -155,7 +180,7 @@ def main():
 				else:
 					gain += val2[0] - val1[0]
 					gains[val2[0] -val1[0] - 1] += 1
-				if len(sys.argv) == 5:				
+				if len(sys.argv) == 8:				
 					print dual[ind][0]
 					print dual[ind][1]
 			count += 1

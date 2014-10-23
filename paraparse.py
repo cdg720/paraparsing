@@ -123,19 +123,34 @@ def read_files(argv):
 	return sd205[::2], sd205[1::2], align[::2], align[1::2]
 
 def main():
-	if len(sys.argv) != 4:
-		print 'usage: python paraparse.py 50best.sd205, 50best.stats, align'
+	if len(sys.argv) != 6:
+		print 'usage: python paraparse.py 50best.sd205, 50best.stats align trees stats'
 		sys.exit(0)
-	trees1, trees2, align1, align2 = read_files(sys.argv[1:])
+	trees1, trees2, align1, align2 = read_files(sys.argv[1:4])
+
+	f = open(sys.argv[4], 'w')
+	g = open(sys.argv[5], 'w')
 	# output pairs that satisfy most contraints and have highest scores
 	for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
 		best = find_best_pair(ts1, ts2, a1, a2)
-		print best[0]
-		print best[1]
+		f.write(str(best[0]) + '\n')
+		f.write(str(best[1]) + '\n')
+		g.write(str(best[0].score) + '\n')
+		g.write(str(best[1].score) + '\n')		
+
+	# output 1best parse and its best complementary (?) parse
+	# for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
+	# 	best = find_best_pair([ts1[0]], ts2, a1, a2)
+	# 	f.write(str(best[0]) + '\n')
+	# 	f.write(str(best[1]) + '\n')
+	# 	g.write(str(best[0].score) + '\n')
+	# 	g.write(str(best[1].score) + '\n')		
 
 	# output 1best parse
 	# for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
-	# 	print ts1[0]
-	# 	print ts2[0]
+	# 	f.write(str(ts1[0]) + '\n')
+	# 	f.write(str(ts2[0]) + '\n')
+	# 	g.write(str(ts1[0].score) + '\n')
+	# 	g.write(str(ts2[0].score) + '\n')		
 
-main()
+#main()
