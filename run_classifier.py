@@ -1,8 +1,8 @@
 from CoNLL import Corpus
 
 from sklearn.ensemble import AdaBoostClassifier
-from sklearn.linear_model import LogisticRegression, Lasso
-from sklearn.svm import LinearSVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC, NuSVC
 
 from sklearn.cross_validation import LeaveOneOut
 
@@ -21,19 +21,20 @@ def get_classifier(cl=0):
 		return AdaBoostClassifier(n_estimators=25, algorithm='SAMME', learning_rate=1.0)	
 	elif cl == 1:
 		print >> sys.stderr, 'LogisticRegression'
-		#return LogisticRegression(C=3.0)
-		return LogisticRegression(penalty='l1', C=1)
-		#return LogisticRegression(penalty='l1', C=0.65)	# works best with dual3
+		return LogisticRegression(C=0.7)
+		#return LogisticRegression(penalty='l1', C=2.5)
+		#return LogisticRegression(penalty='l1', C=3)	# works best with dual3
 		#return LogisticRegression(penalty='l1', C=2.9)
 		#return LogisticRegression(penalty='l1', C=2.0) # lb, cpos: 58
 	elif cl == 2:
 		print >> sys.stderr, 'LinearSVC'
-		return LinearSVC(penalty='l1', dual=False, C=1.5)
-		#return LinearSVC(penalty='l1', dual=False, C=0.7) # lb: 60
+		#return LinearSVC(C=0.1)
+		#return LinearSVC(penalty='l1', dual=False, C=1.5)
+		return LinearSVC(penalty='l1', dual=False, C=0.7) # lb: 60
 		#return LinearSVC(penalty='l1', dual=False, C=1.0)
 		#return LinearSVC(loss='l1')
 	# elif cl == 3:
-	# 	return Lasso() # return some real number.
+	# 	return NuSVC(nu=0.4) # return some real number.
 	else:
 		print >> sys.stderr, 'invalid classifier'
 		return None
@@ -53,20 +54,20 @@ def get_features(base, dual):
 			else:
 				p_lb = 'pROOT'
 
-			features = [#lb, 
-									#lb + p_lb, 
-									cpos, 
-									cpos_lb, 
-									pos, 
-									#pos_lb, 
+			features = [lb, #33 
+									#lb + p_lb, #30
+									cpos, #-3
+									cpos_lb, #51
+									pos, #-5
+									#pos_lb, #10
 									]
 			for feature in features:
 				if feature in feats:
+					#feats[feature] += sign
 					if feats[feature] == sign * -1:
-						feats[feature] = 0
+						 feats[feature] = 0
 				else:
 					feats[feature] = sign
-					
 	return feats				
 
 def preprocess(gold, base, dual, align):
@@ -99,14 +100,16 @@ def preprocess(gold, base, dual, align):
 		feats = get_features(base[ind][0], dual[ind][0])
 		vio1 = paraparse.count_violations(base[ind][0], base[ind][1], align[ind][0], align[ind][1])
 		vio2 = paraparse.count_violations(dual[ind][0], dual[ind][1], align[ind][0], align[ind][1])
-		x = [0,] * (len(feat2ind) + 3)
-		x[-3] = vio1 - vio2
+		x = [0,] * (len(feat2ind) + 4)
 		x[-1] = paraparse.add_scores(base[ind][0].score, base[ind][1].score)
-		x[-2] = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)		
+		x[-2] = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)
+		x[-3] = abs(x[-1] - x[-2]) / (len(base[ind][0]) + len(base[ind][0]))
+		x[-4] = (vio1 - vio2) * 1. / (len(base[ind][0]) + len(base[ind][0]))		
 		for f, v in feats.iteritems():
 			if v != 0:
 				x[feat2ind[f]] = v
 		X.append(x)
+	print  >> sys.stderr, '# features:', len(feat2ind)
 	return np.array(X), np.array(y), indices
 
 def main():
