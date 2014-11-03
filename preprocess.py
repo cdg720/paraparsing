@@ -22,10 +22,11 @@ def check_unicode():
 		ind = 0
 		reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 		for row in reader:
+			ind += 1
 			if not ascii(row[2]):
-				print ind, row[2]
+				print ind, row[2], get_ord(row[2])
 			if not ascii(row[3]):
-				print ind, row[3]
+				print ind, row[3], get_ord(row[3])
 
 def fix_csv():
 	if len(sys.argv) != 2:
@@ -40,7 +41,7 @@ def fix_csv():
 			row[2] = remove_unicode(row[2])
 			row[3] = remove_unicode(row[3])
 			rows.append(row)
-	write_to_file = False
+	write_to_file = True
 	if write_to_file:
 		f = open('fix.csv', 'w')
 		for row in rows:
@@ -60,6 +61,13 @@ def fix_csv():
 			f.write('\n')
 		f.flush()
 		f.close()
+
+def get_ord(s):
+	tmp = []
+	for c in s:
+		if ord(c) >= 128:
+			tmp.append((c, ord(c)))
+	return tmp
 
 def get_words(input, out1, out2):
 	f = open(input, 'r')
@@ -128,6 +136,10 @@ def remove_unicode(s):
 	s = s.replace('\xC2\xBC', '1/4')
 	s = s.replace('\xC2\xBD', '1/2')
 	s = s.replace('\xC2\xBE', '3/4')
+	s = s.replace('\x93', '``')
+	s = s.replace('\x94', "''")
+	s = s.replace('\x96', '--')
+	s = s.replace('\xe2\x80\xa2', 'UNK')
 	return s
 
 def same(x, y):
@@ -184,15 +196,13 @@ def trim(dtrees, pscores, rscores):
 	return x, y, z
 
 def main():
-	# fix_csv() # get rid of unicode in .csv files
-	# check_unicode() # check if .csv file contains any unicode
+	#fix_csv() # get rid of unicode in .csv files
+	check_unicode() # check if .csv file contains any unicode
 	# remove_duplicates(sys.argv[1], sys.argv[2]) # remove duplicates in 50best.sd205
 	# trees, pscores, rscores = read_nbest(sys.argv[1])
 	# for ts, ps, rs in zip(trees, pscores, rscores):
 	# 	print len(ts), len(ps), len(rs)
 	# split_nbest_files(sys.argv[1], sys.argv[2], 1, 687) # get dev1/ data
-	#split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+	# split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
 
 main()
-		
-    

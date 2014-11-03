@@ -140,16 +140,16 @@ def preprocess(gold, base, dual, align):
 		b_score = b[0].evaluate(g[0])
 		d_score = d[0].evaluate(g[0])
 		# use UAS
-		if (b_score[0] > d_score[0] or (b_score[0] == d_score[0] and b_score[1] > d_score[1])):
-		#if b_score[0] > d_score[0]:
+		#if (b_score[0] > d_score[0] or (b_score[0] == d_score[0] and b_score[1] > d_score[1])):
+		if b_score[0] > d_score[0]:
 			y.append(-1)
 			feats = get_features(b[0], d[0])
 			for f, v in feats.iteritems():
 				if v != 0 and f not in feat2ind:
 					feat2ind[f] = len(feat2ind)
 			indices.append(ind)
-		elif b_score[0] < d_score[0] or (b_score[0] == d_score[0] and b_score[1] < d_score[1]):
-		#elif b_score[0] < d_score[0]:
+		#elif b_score[0] < d_score[0] or (b_score[0] == d_score[0] and b_score[1] < d_score[1]):
+		elif b_score[0] < d_score[0]:
 			y.append(1)
 			feats = get_features(b[0], d[0])
 			for f, v in feats.iteritems():
@@ -248,10 +248,10 @@ def main():
 		sys.exit(0)
 	gold, base, dual, align = read_data()
 	# developing features with cross-validation
-	# cross_validation(gold, base, dual, align)
+	cross_validation(gold, base, dual, align)
 
 	# train and test
-	cl, feat2ind = train(gold, base, dual, align)
-	test(cl, feat2ind, gold, base, dual, align)
+	# cl, feat2ind = train(gold, base, dual, align)
+	# test(cl, feat2ind, gold, base, dual, align)
 
 main()

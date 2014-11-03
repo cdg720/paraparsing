@@ -65,7 +65,10 @@ class Sentence:
 					score[0] += 1
 					if token1.deprel == token2.deprel:
 						score[1] += 1
-		return score				
+		return score
+
+	def words(self):
+		return [x.form for x in self.tokens]
 
 # CoNLL 2006 English
 class Token:
