@@ -12,12 +12,12 @@ def nbest(sent):
 
 if len(sys.argv) > 1 and sys.argv[1] == 'self':
 	# self-trained
-	path = '/home/dc65/Documents/models/WSJ+Gigaword'
+	path = '/pro/dpg/dc65/models/WSJ+Gigaword'
 	print 'self-trained:', path
 	rrp = RerankingParser.from_unified_model_dir(path)
 else: 
 	# bllip
-	path = '/home/dc65/Documents/models/WSJ'
+	path = '/pro/dpg/dc65/models/WSJ'
 	print 'basic:', path
 	rrp = RerankingParser.from_unified_model_dir(path)
 
@@ -36,7 +36,7 @@ else:
 	print 'wrong'
 	sys.exit(0)
 
-mode = 0 # 0: gold, 1: 1best, 2: nbest
+mode = 1 # 0: gold, 1: 1best, 2: nbest
 f = open('tmp/output', 'w')
 if mode == 2:
 	g = open('tmp/scores', 'w')

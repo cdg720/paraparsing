@@ -37,9 +37,9 @@ for g, p, s in zip(gold, pred, source):
 	else:
 		print 'unknown source'
 
-print 'WSJ24'
-print 'UAS: %d / %d * 100 = %.2f ' % (wsj24[0], wsj24[2], float(wsj24[0]) / wsj24[2] * 100)
-print 'LAS: %d / %d * 100 = %.2f' % (wsj24[1], wsj24[2], float(wsj24[1]) / wsj24[2] * 100)
+print 'BNC'
+print 'UAS: %d / %d * 100 = %.2f ' % (bnc[0], bnc[2], float(bnc[0]) / bnc[2] * 100)
+print 'LAS: %d / %d * 100 = %.2f' % (bnc[1], bnc[2], float(bnc[1]) / bnc[2] * 100)
 print
 
 print 'BrownTune'
@@ -47,11 +47,11 @@ print 'UAS: %d / %d * 100 = %.2f ' % (brown[0], brown[2], float(brown[0]) / brow
 print 'LAS: %d / %d * 100 = %.2f' % (brown[1], brown[2], float(brown[1]) / brown[2] * 100)
 print
 
-print 'BNC'
-print 'UAS: %d / %d * 100 = %.2f ' % (bnc[0], bnc[2], float(bnc[0]) / bnc[2] * 100)
-print 'LAS: %d / %d * 100 = %.2f' % (bnc[1], bnc[2], float(bnc[1]) / bnc[2] * 100)
-print
-
 print 'QB'
 print 'UAS: %d / %d * 100 = %.2f ' % (qb[0], qb[2], float(qb[0]) / qb[2] * 100)
 print 'LAS: %d / %d * 100 = %.2f' % (qb[1], qb[2], float(qb[1]) / qb[2] * 100)
+print
+
+print 'WSJ24'
+print 'UAS: %d / %d * 100 = %.2f ' % (wsj24[0], wsj24[2], float(wsj24[0]) / wsj24[2] * 100)
+print 'LAS: %d / %d * 100 = %.2f' % (wsj24[1], wsj24[2], float(wsj24[1]) / wsj24[2] * 100)

@@ -184,7 +184,55 @@ def split_nbest_files(trees, stats, start, end):
 		if ind >= start and ind <= end:
 			g.write(str(tree) + '\n')
 			h.write(tokens[0] + '\t' + tokens[1] + '\n')
-		count -= 1	
+		count -= 1
+
+def split_paraphrases():
+	if len(sys.argv) != 3:
+		print 'usage: python preprocess.py paraphrases out'
+		sys.exit(0)
+
+	bnc, brown, qb, wsj = [], [], [], []
+	with open(sys.argv[1], 'rb') as csvfile:
+		reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+		ind = 0
+		for row in reader:
+			ind += 1
+			if ind % 3 == 0:
+				continue
+			if row[0] == 'BNC':
+				bnc.append(row)
+			elif row[0] == 'BrownTune':
+				brown.append(row)
+			elif row[0] == 'QB':
+				qb.append(row)
+			elif row[0] == 'WSJ24':
+				wsj.append(row)
+	bnc = [[x, y] for x, y in zip(bnc[::2], bnc[1::2])] # 494 -> 247 247
+	brown = [[x, y] for x, y in zip(brown[::2], brown[1::2])] # 1116 -> 558 558
+	qb = [[x, y] for x, y in zip(qb[::2], qb[1::2])] # 1687 -> 843 844
+	wsj = [[x, y] for x, y in zip(wsj[::2], wsj[1::2])] # 703 -> 352 351
+
+	first, second = [], []
+	first += bnc[::2] + brown[::2] + qb[:-1][::2] + wsj[::2]
+	second += bnc[1::2] + brown[1::2]	+ qb[1::2] + [qb[-1]] + wsj[1::2]
+
+	f = open(sys.argv[2], 'w')
+	for x in first + second:
+		for xx in x:
+			f.write(xx[0] + ',' + xx[1] + ',')
+			if len(xx[2]) > 0:
+				f.write('"' + xx[2] + '"')
+			else:
+				f.write(xx[2])
+			f.write(',')
+			if len(xx[3]) > 0:
+				f.write('"' + xx[3] + '"')
+			else:
+				f.write(xx[3])
+			f.write('\n')
+		f.write(',,,\n')
+	f.flush()
+	f.close()
 
 def trim(dtrees, pscores, rscores):
 	x, y, z = [], [], []
@@ -195,14 +243,16 @@ def trim(dtrees, pscores, rscores):
 			z.append(rs)
 	return x, y, z
 
+
 def main():
 	#fix_csv() # get rid of unicode in .csv files
-	check_unicode() # check if .csv file contains any unicode
+	#check_unicode() # check if .csv file contains any unicode
 	# remove_duplicates(sys.argv[1], sys.argv[2]) # remove duplicates in 50best.sd205
 	# trees, pscores, rscores = read_nbest(sys.argv[1])
 	# for ts, ps, rs in zip(trees, pscores, rscores):
 	# 	print len(ts), len(ps), len(rs)
 	# split_nbest_files(sys.argv[1], sys.argv[2], 1, 687) # get dev1/ data
-	# split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+	#split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+	split_paraphrases()
 
 main()
