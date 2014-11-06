@@ -163,7 +163,7 @@ def split_nbest_files(trees, stats, start, end):
 	f = gzip.open(stats, 'rb')
 	g = gzip.open('x', 'wb')
 	h = gzip.open('y', 'wb')
-	start = 2*(start-1) # 1-index
+	start = 2*start-1 # 1-index
 	end = 2*end
 	it = iter(corpus.sentences)
 	count = 0
@@ -247,12 +247,14 @@ def trim(dtrees, pscores, rscores):
 def main():
 	#fix_csv() # get rid of unicode in .csv files
 	#check_unicode() # check if .csv file contains any unicode
-	# remove_duplicates(sys.argv[1], sys.argv[2]) # remove duplicates in 50best.sd205
+	#remove_duplicates(sys.argv[1], sys.argv[2]) # remove duplicates in 50best.sd205
 	# trees, pscores, rscores = read_nbest(sys.argv[1])
 	# for ts, ps, rs in zip(trees, pscores, rscores):
 	# 	print len(ts), len(ps), len(rs)
-	# split_nbest_files(sys.argv[1], sys.argv[2], 1, 687) # get dev1/ data
+	split_nbest_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])) # get dev1/ data
 	#split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
-	split_paraphrases()
+	#folder = '/gpfs/main/home/dc65/Documents/research/paraparsing/data3/'
+	#get_words(folder + 'gold', folder + 'sent1.tokenized', folder + 'sent2.tokenized')
+	#split_paraphrases()
 
-main()
+#main()

@@ -36,7 +36,7 @@ else:
 	print 'wrong'
 	sys.exit(0)
 
-mode = 1 # 0: gold, 1: 1best, 2: nbest
+mode = 2 # 0: gold, 1: 1best, 2: nbest
 f = open('tmp/output', 'w')
 if mode == 2:
 	g = open('tmp/scores', 'w')
