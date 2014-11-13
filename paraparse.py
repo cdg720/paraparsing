@@ -57,8 +57,8 @@ def count_violations(tree1, tree2, align1, align2, label=False):
 		if align1[head1][0] != head2:
 			count += 1
 		# elif tree1.tokens[i].deprel != tree2.tokens[twin].deprel:
-		#  	count += 0.1
-			
+		#  	count += 1
+
 	for i in xrange(1, len(tree2)):
 		if align2[i][0] == -1:
 			continue
@@ -73,7 +73,7 @@ def count_violations(tree1, tree2, align1, align2, label=False):
 		if align2[head2][0] != head1:
 			count += 1
 		# elif tree2.tokens[i].deprel != tree1.tokens[twin].deprel:
-		# 	count += 0.1
+		# 	count += 1
 	return count
 
 def find_best_pair(trees1, trees2, align1, align2):
@@ -161,12 +161,12 @@ def main():
 	f = open(sys.argv[4], 'w')
 	g = open(sys.argv[5], 'w')
 	# output pairs that satisfy most contraints and have highest scores
-	for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
-		best = find_best_pair(ts1, ts2, a1, a2)
-		f.write(str(best[0]) + '\n')
-		f.write(str(best[1]) + '\n')
-		g.write(str(best[0].score) + '\n')
-		g.write(str(best[1].score) + '\n')		
+	# for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
+	# 	best = find_best_pair(ts1, ts2, a1, a2)
+	# 	f.write(str(best[0]) + '\n')
+	# 	f.write(str(best[1]) + '\n')
+	# 	g.write(str(best[0].score) + '\n')
+	# 	g.write(str(best[1].score) + '\n')		
 
 	# output 1best parse and its best complementary (?) parse
 	# for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
@@ -177,10 +177,10 @@ def main():
 	# 	g.write(str(best[1].score) + '\n')		
 
 	# output 1best parse
-	# for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
-	# 	f.write(str(ts1[0]) + '\n')
-	# 	f.write(str(ts2[0]) + '\n')
-	# 	g.write(str(ts1[0].score) + '\n')
-	# 	g.write(str(ts2[0].score) + '\n')		
+	for ts1, ts2, a1, a2 in zip(trees1, trees2, align1, align2):
+		f.write(str(ts1[0]) + '\n')
+		f.write(str(ts2[0]) + '\n')
+		g.write(str(ts1[0].score) + '\n')
+		g.write(str(ts2[0].score) + '\n')		
 
-main()
+#main()

@@ -55,10 +55,10 @@ class Sentence:
 		for token1, token2 in zip(self.tokens, gold.tokens):
 			if token1.head == -1: # head
 				continue
-			if token1.form != token2.form:
-				print [x.form for x in self.tokens]
-				print [x.form for x in gold.tokens]
-				sys.exit(0)
+			# if token1.form != token2.form:
+			# 	print [x.form for x in self.tokens]
+			# 	print [x.form for x in gold.tokens]
+			# 	sys.exit(0)
 			if not regex.match(token1.form) and token1.form not in etc:
 				score[2] += 1
 				if token1.head == token2.head:

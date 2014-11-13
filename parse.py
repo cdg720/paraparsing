@@ -10,37 +10,33 @@ def nbest(sent):
 	nbest_list = rrp.parse(sent)
 	return nbest_list
 
-if len(sys.argv) > 1 and sys.argv[1] == 'self':
-	# self-trained
-	path = '/pro/dpg/dc65/models/WSJ+Gigaword'
-	print 'self-trained:', path
-	rrp = RerankingParser.from_unified_model_dir(path)
-else: 
+if len(sys.argv) != 4:
+	print 'usage: python parse.py paraphrases.csv mode parser'
+	print 'usage: python parse.py paraphrases.csv 0 bllip'	
+	sys.exit(0)
+
+if sys.argv[3] == 'bllip':
 	# bllip
-	path = '/pro/dpg/dc65/models/WSJ'
-	print 'basic:', path
-	rrp = RerankingParser.from_unified_model_dir(path)
-
-if len(sys.argv) < 2:
-	print 'usage: python parse.py paraphrases.csv'
-	sys.exit(0)
-elif len(sys.argv) == 2 and sys.argv[1] == 'self':
-	print 'usage: python parse.py self paraphrases.csv'
-	sys.exit(0)
-
-if len(sys.argv) == 3:
-	path = sys.argv[2]
-elif len(sys.argv) == 2:
-	path = sys.argv[1]
+	parser = '/pro/dpg/dc65/models/WSJ+QB'
+	print 'basic:', parser
+elif sys.argv[3] == 'self':
+	# self-trained
+	parser = '/pro/dpg/dc65/models/WSJ+Gigaword'
+	print 'self-trained:', parser
 else:
-	print 'wrong'
+	print 'parser options: bllip, self'
 	sys.exit(0)
 
-mode = 2 # 0: gold, 1: 1best, 2: nbest
-f = open('tmp/output', 'w')
+rrp = RerankingParser()
+rrp.load_parser_model(parser + '/parser')
+print 'reranker: /pro/dpg/dc65/models/WSJ/'
+rrp.load_reranker_model('/pro/dpg/dc65/models/WSJ/reranker/features.gz', '/pro/dpg/dc65/models/WSJ/reranker/weights.gz')
+	
+mode = int(sys.argv[2]) # 0: gold, 1: 1best, 2: nbest
+f = open('tmp/trees', 'w')
 if mode == 2:
 	g = open('tmp/scores', 'w')
-with open(path, 'rb') as csvfile:
+with open(sys.argv[1], 'rb') as csvfile:
 	reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 	iter = 0
 	for row in reader:

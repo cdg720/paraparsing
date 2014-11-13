@@ -251,8 +251,8 @@ def main():
 	# trees, pscores, rscores = read_nbest(sys.argv[1])
 	# for ts, ps, rs in zip(trees, pscores, rscores):
 	# 	print len(ts), len(ps), len(rs)
-	split_nbest_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])) # get dev1/ data
-	#split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+	#split_nbest_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])) # get dev1/ data
+	split_files(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
 	#folder = '/gpfs/main/home/dc65/Documents/research/paraparsing/data3/'
 	#get_words(folder + 'gold', folder + 'sent1.tokenized', folder + 'sent2.tokenized')
 	#split_paraphrases()
