@@ -20,12 +20,14 @@ with open(sys.argv[3], 'rb') as csvfile:
 		if ind % 3 == 1:
 			source.append(row[0])
 
+dev = np.array([0,] * 3)
 wsj24 = np.array([0,] * 3)
 brown = np.array([0,] * 3)
 bnc = np.array([0,] * 3)
 qb = np.array([0,] * 3)
 for g, p, s in zip(gold, pred, source):
 	score = np.array(p.evaluate(g))
+	dev += score
 	if s == 'WSJ24':
 		wsj24 += score
 	elif s == 'BrownTune':
@@ -36,6 +38,11 @@ for g, p, s in zip(gold, pred, source):
 		qb += score
 	else:
 		print 'unknown source'
+
+print 'ALL'
+print 'UAS: %d / %d * 100 = %.2f ' % (dev[0], dev[2], float(dev[0]) / dev[2] * 100)
+print 'LAS: %d / %d * 100 = %.2f' % (dev[1], dev[2], float(dev[1]) / dev[2] * 100)
+print
 
 print 'BNC'
 print 'UAS: %d / %d * 100 = %.2f ' % (bnc[0], bnc[2], float(bnc[0]) / bnc[2] * 100)

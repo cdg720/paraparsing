@@ -4,6 +4,7 @@ import sys
 
 def best(sent):
 	nbest_list = rrp.parse(sent)
+	#nbest_list = rrp.parse(sent, rerank=False) # HACK
 	return nbest_list[0]
 
 def nbest(sent):

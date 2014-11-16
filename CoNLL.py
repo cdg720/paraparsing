@@ -34,6 +34,11 @@ class Sentence:
 		self.tokens = [root] + tokens
 		self.score = None
 
+		self.regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
+		self.etc = ['-LRB-', '-RRB-', '``']
+		#self.etc = ['-LRB-', '-RRB-']
+		
+
 	def __len__(self):
 		return len(self.tokens)
 
@@ -43,10 +48,13 @@ class Sentence:
 			tmp += str(self.tokens[i].id) + '\t' + self.tokens[i].form + '\t' + self.tokens[i].lemma + '\t' + self.tokens[i].cpos + '\t' + self.tokens[i].pos + '\t' + self.tokens[i].feat + '\t' + str(self.tokens[i].head) + '\t' + self.tokens[i].deprel + '\t_\t_\n'
 		return tmp
 
+	def crossings(self, sent, align):
+		return 0
+
+	def edit_distance(self, sent):
+		return ans
+
 	def evaluate(self, gold):
-		regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
-		#etc = ['-LRB-', '-RRB-', '``']
-		etc = []
 		if len(self) != len(gold):
 			print [x.form for x in self.tokens]
 			print [x.form for x in gold.tokens]
@@ -59,7 +67,7 @@ class Sentence:
 			# 	print [x.form for x in self.tokens]
 			# 	print [x.form for x in gold.tokens]
 			# 	sys.exit(0)
-			if not regex.match(token1.form) and token1.form not in etc:
+			if not self.regex.match(token1.form) and token1.form not in self.etc:
 				score[2] += 1
 				if token1.head == token2.head:
 					score[0] += 1
@@ -67,8 +75,44 @@ class Sentence:
 						score[1] += 1
 		return score
 
-	def words(self):
-		return [x.form for x in self.tokens]
+	def nonprojective_edges(self):
+		ans = 0
+		
+		return ans
+
+	def overlaps(self, sent, bigram=False, lower=False, punc=False):
+		ans = 0
+		words1 = self.words()
+		words2 = sent.words()
+		if bigram:
+			tmp1 = ['START'] + words1 + ['END']
+			tmp2 = ['START'] + words2 + ['END']
+			words1, words2 = [], []
+			for i in xrange(len(tmp1)-1):
+				words1.append(tmp1[i] + '_' + tmp1[i+1])
+			for i in xrange(len(tmp2)-1):
+				words2.append(tmp2[i] + '_' + tmp2[i+1])
+		if lower:
+			words1 = [x.lower() for x in words1]
+			words2 = [x.lower() for x in words2]
+		dict1 = {}
+		for word in words1:
+			if punc and (self.regex.match(word) or word in self.etc):
+				continue
+			if word not in dict1:
+				dict1[word] = 1
+			else:
+				dict1[word] += 1
+		for word in words2:
+			if punc and (self.regex.match(word) or word in self.etc):
+				continue
+			if word in dict1 and dict1[word] > 0:
+				ans += 1
+				dict1[word] -= 1
+		return ans
+
+	def words(self, no_root=True):
+		return [x.form for x in self.tokens[1:]]
 
 # CoNLL 2006 English
 class Token:

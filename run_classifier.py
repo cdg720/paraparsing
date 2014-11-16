@@ -117,11 +117,11 @@ def get_features(base, dual):
 				p_lb = 'pROOT'
 
 			features = [lb, #33 
-									#lb + ' ' + p_lb, #30
-									#cpos, #-3
-									#cpos_lb, #51
-									#pos, #-5
-									pos_lb, #10
+									lb + ' ' + p_lb, #30
+									cpos, #-3
+									cpos_lb, #51
+									pos, #-5
+									#pos_lb, #10
 									]
 			for feature in features:
 				if feature in feats:
@@ -169,7 +169,7 @@ def preprocess(gold, base, dual, align):
 		# use LAS
 		#if (b_score[0] > d_score[0] or (b_score[0] == d_score[0] and b_score[1] > d_score[1])):
 		# use UAS
-		if sauce != 'QB' and b_score[0] > d_score[0]:
+		if b_score[0] > d_score[0]:
 			y.append(-1)
 			feats = get_features(b[0], d[0])
 			for f, v in feats.iteritems():
@@ -182,7 +182,7 @@ def preprocess(gold, base, dual, align):
 						counts[f] = 1
 			indices.append(ind)
 		#elif b_score[0] < d_score[0] or (b_score[0] == d_score[0] and b_score[1] < d_score[1]):
-		elif sauce != 'QB' and b_score[0] < d_score[0]:
+		elif b_score[0] < d_score[0]:
 			y.append(1)
 			feats = get_features(b[0], d[0])
 			for f, v in feats.iteritems():
@@ -203,7 +203,7 @@ def preprocess(gold, base, dual, align):
 		x = [0,] * (len(feat2ind) + 4)
 		x[-1] = paraparse.add_scores(base[ind][0].score, base[ind][1].score)
 		x[-2] = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)
-		#x[-3] = abs(x[-1] - x[-2]) / (len(base[ind][0]) + len(base[ind][1]))
+		# x[-3] = abs(x[-1] - x[-2]) / (len(base[ind][0]) + len(base[ind][1]))
 		x[-4] = (vio1 - vio2) * 1. / (len(base[ind][0]) + len(base[ind][1]))		
 		for f, v in feats.iteritems():
 			if v != 0 and counts[f] > th:
