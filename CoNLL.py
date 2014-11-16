@@ -37,7 +37,6 @@ class Sentence:
 		self.regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
 		self.etc = ['-LRB-', '-RRB-', '``']
 		#self.etc = ['-LRB-', '-RRB-']
-		
 
 	def __len__(self):
 		return len(self.tokens)
@@ -48,11 +47,39 @@ class Sentence:
 			tmp += str(self.tokens[i].id) + '\t' + self.tokens[i].form + '\t' + self.tokens[i].lemma + '\t' + self.tokens[i].cpos + '\t' + self.tokens[i].pos + '\t' + self.tokens[i].feat + '\t' + str(self.tokens[i].head) + '\t' + self.tokens[i].deprel + '\t_\t_\n'
 		return tmp
 
+	def bigrams(self, no_root=True):
+		tmp = ['START'] + self.words() + ['END']
+		bigrams = []
+		for i in xrange(len(tmp)-1):
+			bigrams.append(tmp[i] + '_' + tmp[i+1])
+		return bigrams
+
 	def crossings(self, sent, align):
 		return 0
 
-	def edit_distance(self, sent):
-		return ans
+	# how about punctuation?
+	def edit_distance(self, sent, bigram=False): 
+		if len(self.tokens) < len(sent.tokens):
+			return sent.edit_distance(self)
+		if bigram:
+			words1 = self.bigrams()
+			words2 = sent.bigrams()
+		else:
+			words1 = self.words()
+			words2 = sent.words()
+		if len(words2) == 0:
+			return len(words1)
+
+		previous_row = range(len(words2) + 1)
+		for i, word1, in enumerate(words1):
+			current_row = [i+1]
+			for j, word2 in enumerate(words2):
+				insertions = previous_row[j+1]+1
+				deletions = current_row[j]+1
+				substitutions = previous_row[j] + (word1 != word2)
+				current_row.append(min(insertions, deletions, substitutions))
+			previous_row = current_row
+		return previous_row[-1]
 
 	def evaluate(self, gold):
 		if len(self) != len(gold):
@@ -77,21 +104,30 @@ class Sentence:
 
 	def nonprojective_edges(self):
 		ans = 0
-		
+		for i in xrange(len(self.tokens)-1):
+			pos1 = self.tokens[i].id
+			head1 = self.tokens[i].head
+			for j in xrange(i+1, len(self.tokens)):
+				pos2 = self.tokens[j].id
+				head2 = self.tokens[j].head
+				if head2 < pos1 < pos2 < head1:
+					ans += 1
+				if head1 < pos2 < pos1 < head2:
+					ans += 1
+				if pos2 < head1 < head2 < pos1:
+					ans += 1
+				if pos1 < head2 < head1 < pos2:
+					ans += 1
 		return ans
 
 	def overlaps(self, sent, bigram=False, lower=False, punc=False):
 		ans = 0
-		words1 = self.words()
-		words2 = sent.words()
 		if bigram:
-			tmp1 = ['START'] + words1 + ['END']
-			tmp2 = ['START'] + words2 + ['END']
-			words1, words2 = [], []
-			for i in xrange(len(tmp1)-1):
-				words1.append(tmp1[i] + '_' + tmp1[i+1])
-			for i in xrange(len(tmp2)-1):
-				words2.append(tmp2[i] + '_' + tmp2[i+1])
+			words1 = self.bigrams()
+			words2 = sent.bigrams()
+		else:
+			words1 = self.words()
+			words2 = sent.words()
 		if lower:
 			words1 = [x.lower() for x in words1]
 			words2 = [x.lower() for x in words2]
