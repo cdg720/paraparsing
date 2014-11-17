@@ -29,14 +29,15 @@ class Corpus:
 			self.sentences.append(tokens)
 
 class Sentence:
+	regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
+	etc = ['-LRB-', '-RRB-', '``']
+	#etc = ['-LRB-', '-RRB-']
+	
 	def __init__(self, tokens):
 		root = Token(['0','ROOT','_','_','_','_','-1','_','_','_'])
 		self.tokens = [root] + tokens
 		self.score = None
 
-		self.regex = re.compile(r'^[-!"#%&\'()*,./:;?@[\\\]_{}]+$')
-		self.etc = ['-LRB-', '-RRB-', '``']
-		#self.etc = ['-LRB-', '-RRB-']
 
 	def __len__(self):
 		return len(self.tokens)
@@ -67,13 +68,15 @@ class Sentence:
 	# 	return ans
 
 	@staticmethod
-	def crossings(sent1, sent2, a2b, b2a): # sent1, sent2 are not needed
+	def crossings(sent1, sent2, a2b, b2a, punc=False): # sent1, sent2 are not needed
 		ans = 0
 		x = [-1] * len(a2b)
 		y = [-1] * len(b2a)
 		count = 0
 		for i in xrange(1, len(a2b)):
 			if a2b[i][0] == -1:
+				continue
+			if punc and (Sentence.regex.match(sent1.tokens[i].form) or sent1.tokens[i].form in Sentence.etc):
 				continue
 			twin = a2b[i][0]
 			if (x[i-1] == -1 or y[twin-1] == -1) or x[i-1] != y[twin-1]: # new start
@@ -138,7 +141,7 @@ class Sentence:
 			# 	print [x.form for x in self.tokens]
 			# 	print [x.form for x in gold.tokens]
 			# 	sys.exit(0)
-			if not self.regex.match(token1.form) and token1.form not in self.etc:
+			if not Sentence.regex.match(token1.form) and token1.form not in Sentence.etc:
 				score[2] += 1
 				if token1.head == token2.head:
 					score[0] += 1
@@ -177,14 +180,14 @@ class Sentence:
 			words2 = [x.lower() for x in words2]
 		dict1 = {}
 		for word in words1:
-			if punc and (self.regex.match(word) or word in self.etc):
+			if punc and (Sentence.regex.match(word) or word in Sentence.etc):
 				continue
 			if word not in dict1:
 				dict1[word] = 1
 			else:
 				dict1[word] += 1
 		for word in words2:
-			if punc and (self.regex.match(word) or word in self.etc):
+			if punc and (Sentence.regex.match(word) or word in Sentence.etc):
 				continue
 			if word in dict1 and dict1[word] > 0:
 				ans += 1
