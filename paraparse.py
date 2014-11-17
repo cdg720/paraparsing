@@ -183,4 +183,4 @@ def main():
 	# 	g.write(str(ts1[0].score) + '\n')
 	# 	g.write(str(ts2[0].score) + '\n')		
 
-main()
+#main()

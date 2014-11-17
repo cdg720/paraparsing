@@ -54,22 +54,66 @@ class Sentence:
 			bigrams.append(tmp[i] + '_' + tmp[i+1])
 		return bigrams
 
-	def crossings(self, sent, align):
-		return 0
+	# def crossings(self, sent, a2b):
+	# 	ans = 0
+	# 	for i in xrange(1, len(a2b)-1):
+	# 		if a2b[i][0] == -1:
+	# 			continue
+	# 		for j in xrange(i+1, len(a2b)):
+	# 			if a2b[j][0] == -1:
+	# 				continue
+	# 			if i < j and a2b[i][0] > a2b[j][0]:
+	# 				ans += 1
+	# 	return ans
+
+	@staticmethod
+	def crossings(sent1, sent2, a2b, b2a): # sent1, sent2 are not needed
+		ans = 0
+		x = [-1] * len(a2b)
+		y = [-1] * len(b2a)
+		count = 0
+		for i in xrange(1, len(a2b)):
+			if a2b[i][0] == -1:
+				continue
+			twin = a2b[i][0]
+			if (x[i-1] == -1 or y[twin-1] == -1) or x[i-1] != y[twin-1]: # new start
+				count += 1
+			x[i] = count
+			y[twin] = count
+
+		order = []
+		for num in y:
+			if num == -1:
+				continue
+			if num not in order:
+				order.append(num)
+
+		for i in xrange(len(order)-1):
+			for j in xrange(i+1, len(order)):
+				if order[i] > order[j]:
+					ans += 1
+		
+		#return Sentence.edit_distance2(range(1, len(order)+1), order)
+		return ans
 
 	# how about punctuation?
-	def edit_distance(self, sent, bigram=False): 
-		if len(self.tokens) < len(sent.tokens):
-			return sent.edit_distance(self)
+	@staticmethod
+	def edit_distance(sent1, sent2, bigram=False): 
+		if len(sent1.tokens) < len(sent2.tokens):
+			return Sentence.edit_distance(sent2, sent1)
 		if bigram:
-			words1 = self.bigrams()
-			words2 = sent.bigrams()
+			words1 = sent1.bigrams()
+			words2 = sent2.bigrams()
 		else:
-			words1 = self.words()
-			words2 = sent.words()
+			words1 = sent1.words()
+			words2 = sent2.words()
 		if len(words2) == 0:
 			return len(words1)
+		
+		return Sentence.edit_distance2(words1, words2)
 
+	@staticmethod
+	def edit_distance2(words1, words2):
 		previous_row = range(len(words2) + 1)
 		for i, word1, in enumerate(words1):
 			current_row = [i+1]
