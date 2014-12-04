@@ -2,6 +2,8 @@ import csv
 import sys
 from CoNLL import Corpus
 
+from preprocess import same
+
 if len(sys.argv) != 5:
 	print 'usage: python comp.py gold base dual .csv'
 	sys.exit(0)
@@ -28,6 +30,7 @@ b_scores = [0.] * 3
 d_scores = [0.] * 3
 board = [0] * 3
 i = 0
+duh = [0] * 5
 for g, b, d, s in zip(gold, base, dual, source):
 	tmp = b.evaluate(g)
 	b_scores[0] += tmp[0]
@@ -37,6 +40,16 @@ for g, b, d, s in zip(gold, base, dual, source):
 	d_scores[0] += tmp2[0]
 	d_scores[1] += tmp2[1]
 	d_scores[2] += tmp2[2]
+	if not same(b, d):
+		duh[0] += 1
+		if s == 'BNC':
+			duh[1] += 1
+		if s == 'BrownTune':
+			duh[2] += 1
+		if s == 'QB':
+			duh[3] += 1
+		if s == 'WSJ24':
+			duh[4] += 1
 	if tmp[0] > tmp2[0]: # lose
 		board[2] += 1
 		print  i, 'losing', tmp2[0] - tmp[0], s
@@ -60,5 +73,6 @@ print
 print 'dual'
 print 'UAS: %d / %d * 100 = %.2f ' % (int(d_scores[0]), int(d_scores[2]), d_scores[0] / d_scores[2] * 100)
 print 'LAS: %d / %d * 100 = %.2f' % (int(d_scores[1]), int(d_scores[2]), d_scores[1] / d_scores[2] * 100)
-	
+
+print duh
 	

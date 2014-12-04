@@ -37,7 +37,8 @@ class Sentence:
 		root = Token(['0','ROOT','_','_','_','_','-1','_','_','_'])
 		self.tokens = [root] + tokens
 		self.score = None
-
+		self.rank = None
+		self.n = None
 
 	def __len__(self):
 		return len(self.tokens)
@@ -167,14 +168,15 @@ class Sentence:
 					ans += 1
 		return ans
 
-	def overlaps(self, sent, bigram=False, lower=False, punc=False):
+	@staticmethod
+	def overlaps(sent1, sent2, bigram=False, lower=False, punc=False):
 		ans = 0
 		if bigram:
-			words1 = self.bigrams()
-			words2 = sent.bigrams()
+			words1 = sent1.bigrams()
+			words2 = sent2.bigrams()
 		else:
-			words1 = self.words()
-			words2 = sent.words()
+			words1 = sent1.words()
+			words2 = sent2.words()
 		if lower:
 			words1 = [x.lower() for x in words1]
 			words2 = [x.lower() for x in words2]

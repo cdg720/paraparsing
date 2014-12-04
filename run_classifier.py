@@ -1,10 +1,10 @@
-from CoNLL import Corpus
+from CoNLL import Corpus, Sentence
 
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC, NuSVC
 
-from sklearn.cross_validation import LeaveOneOut
+from sklearn.cross_validation import LeaveOneOut, KFold
 
 from collections import Counter
 
@@ -16,11 +16,17 @@ import paraparse
 
 def cross_validation(gold, base, dual, align):
 	X, y, indices, _ = preprocess(gold, base, dual, align)
-	loo = LeaveOneOut(len(y))
+	if True:
+		print >> sys.stderr, 'Leave One Out'
+		kf = LeaveOneOut(len(y))
+	else:
+		print >> sys.stderr, '10-fold Cross Validation'
+		kf = KFold(len(y), 10)
+		
 	correct = 0
 	cl = get_classifier(which)
 	out = []
-	for train_indices, test_index in loo:
+	for train_indices, test_index in kf:
 		# make sure train/test split is disjoint
 		X_train, X_test = X[train_indices], X[test_index]
 		y_train, y_test = y[train_indices], y[test_index]
@@ -34,9 +40,8 @@ def cross_validation(gold, base, dual, align):
 		except:
 			cl.fit(X_train, y_train)
 		y_pred = cl.predict(X_test)
-		out.append(y_pred[0])
-		if y_pred == y_test:
-			correct += 1
+		out += list(y_pred)
+		correct += sum([yp == yg for yp, yg in zip(y_pred, y_test)])
 	evaluate(correct, indices, out, y, gold, base, dual)
 
 def evaluate(correct, indices, out, y, gold, base, dual):
@@ -80,12 +85,12 @@ def get_classifier(cl=0):
 	if cl == 0:
 		print >> sys.stderr, 'AdaBoostClassifier'
 		#return AdaBoostClassifier()
-		return AdaBoostClassifier(n_estimators=25, algorithm='SAMME', learning_rate=1.0)	
+		return AdaBoostClassifier(n_estimators=5, algorithm='SAMME', learning_rate=1)	
 	elif cl == 1:
 		print >> sys.stderr, 'LogisticRegression'
-		return LogisticRegression(C=1)
+		return LogisticRegression(C=0.7)
+		#return LogisticRegression(penalty='l1', C=0.8)
 		#return LogisticRegression(penalty='l1', C=1)
-		#return LogisticRegression(penalty='l1', C=3)	# works best with dual3
 		#return LogisticRegression(penalty='l1', C=2.9)
 		#return LogisticRegression(penalty='l1', C=2.0) # lb, cpos: 58
 	elif cl == 2:
@@ -116,12 +121,12 @@ def get_features(base, dual):
 			else:
 				p_lb = 'pROOT'
 
-			features = [lb, #33 
-									lb + ' ' + p_lb, #30
-									cpos, #-3
-									cpos_lb, #51
-									pos, #-5
-									#pos_lb, #10
+			features = [lb, #v 18
+									#lb + ' ' + p_lb, #v -15
+									cpos, #x -9
+									cpos_lb, #v -5
+									pos, #x -4
+									#pos_lb, #x 20
 									]
 			for feature in features:
 				if feature in feats:
@@ -154,7 +159,23 @@ def get_features2(base, dual, align):
 				else:
 					feats[key] = 1
 	return feats
-	
+
+def get_features3(sent1, sent2, align):
+	x = []
+	z = len(sent1.words())
+	#z = 1
+	# % of vocab overlaps
+	x.append(float(Sentence.overlaps(sent1, sent2)) / z)
+	#x.append(float(Sentence.overlaps(base, dual)))	
+	# normalized edit_distance
+	x.append(float(Sentence.edit_distance(sent1, sent2)) / z)
+	#x.append(float(Sentence.edit_distance(base, dual)))	
+	# normalized # of crossings
+	x.append(float(Sentence.crossings(sent1, sent2, align[0], align[1])) / z)
+	#x.append(float(Sentence.crossings(base, dual, align[0], align[1])))
+	# length
+	#x.append(z)
+	return x
 
 def preprocess(gold, base, dual, align):
 	indices = []
@@ -180,6 +201,15 @@ def preprocess(gold, base, dual, align):
 						counts[f] += 1
 					else:
 						counts[f] = 1
+			# feats2 = get_features2(b[0], d[0], align[ind])
+			# for f, v in feats2.iteritems():
+			# 	if v != 0 and f not in feat2ind:
+			# 		feat2ind[f] = len(feat2ind)
+			# 	if v != 0:
+			# 		if f in counts:
+			# 			counts[f] += 1
+			# 		else:
+			# 			counts[f] = 1
 			indices.append(ind)
 		#elif b_score[0] < d_score[0] or (b_score[0] == d_score[0] and b_score[1] < d_score[1]):
 		elif b_score[0] < d_score[0]:
@@ -193,25 +223,50 @@ def preprocess(gold, base, dual, align):
 						counts[f] += 1
 					else:
 						counts[f] = 1
+			# feats2 = get_features2(b[0], d[0], align[ind])
+			# for f, v in feats2.iteritems():
+			# 	if v != 0 and f not in feat2ind:
+			# 		feat2ind[f] = len(feat2ind)
+			# 	if v != 0:
+ 			# 		if f in counts:
+			# 			counts[f] += 1
+			# 		else:
+			# 			counts[f] = 1
 			indices.append(ind)
 		ind += 1
 	th = 1
 	for ind in indices:
+		x = [0,] * (len(feat2ind) + 10)
 		feats = get_features(base[ind][0], dual[ind][0])
-		vio1 = paraparse.count_violations(base[ind][0], base[ind][1], align[ind][0], align[ind][1])
-		vio2 = paraparse.count_violations(dual[ind][0], dual[ind][1], align[ind][0], align[ind][1])
-		x = [0,] * (len(feat2ind) + 4)
-		x[-1] = paraparse.add_scores(base[ind][0].score, base[ind][1].score)
-		x[-2] = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)
-		# x[-3] = abs(x[-1] - x[-2]) / (len(base[ind][0]) + len(base[ind][1]))
-		x[-4] = (vio1 - vio2) * 1. / (len(base[ind][0]) + len(base[ind][1]))		
 		for f, v in feats.iteritems():
 			if v != 0 and counts[f] > th:
 				x[feat2ind[f]] = v
+		# feats2 = get_features2(base[ind][0], dual[ind][0], align[ind])
+		# for f, v in feats2.iteritems():
+		# 	if v != 0 and counts[f] > th:
+		# 		x[feat2ind[f]] = v
+		vio1 = paraparse.count_violations(base[ind][0], base[ind][1], align[ind][0], align[ind][1])
+		vio2 = paraparse.count_violations(dual[ind][0], dual[ind][1], align[ind][0], align[ind][1])
+		sum_base_scores = paraparse.add_scores(base[ind][0].score, base[ind][1].score)
+		sum_dual_scores = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)
+		x[-1] = sum_base_scores
+		x[-2] = sum_dual_scores
+		# x[-3] = base[ind][0].score
+		# x[-4] = dual[ind][0].score
+		z = len(base[ind][0].words())
+		#x[-9] = base[ind][1].score > dual[ind][1].score
+		#x[-8] = sum_base_scores > sum_dual_scores
+		#x[-7] = vio2 < vio1
+		# x[-6] = float(Sentence.overlaps(base[ind][0], base[ind][1])) / z# overlaps
+		# x[-5] = float(Sentence.edit_distance(base[ind][0], base[ind][1])) / z# edit distance
+		# x[-4] = float(Sentence.crossings(base[ind][0], base[ind][1], align[ind][0], align[ind][1])) / z# crossings
+		# x[-3] = base[ind][0].nonprojective_edges() - dual[ind][0].nonprojective_edges()
+		# x[-2] = z < 20
+		# x[-1] = len(base[ind][0].words()) < len(base[ind][1].words())
 		X.append(x)
-
-	print  >> sys.stderr, '# features:', len(feat2ind)
-	print  >> sys.stderr, '# features:', sum([counts[x] > th for x in counts])
+		
+	print  >> sys.stderr, '# features:', len(feat2ind), '(before pruning)'
+	print  >> sys.stderr, '# features:', sum([counts[x] > th for x in counts]), '(after pruning)'
 	return np.array(X), np.array(y), indices, feat2ind
 
 def preprocess2(gold, base, dual, align, feat2ind):
@@ -284,11 +339,15 @@ def preprocess3(gold, base, dual, align):
 		feats = get_features2(base[ind][0], dual[ind][0], align[ind])
 		vio1 = paraparse.count_violations(base[ind][0], base[ind][1], align[ind][0], align[ind][1])
 		vio2 = paraparse.count_violations(dual[ind][0], dual[ind][1], align[ind][0], align[ind][1])
-		x = [0,] * (len(feat2ind) + 4)
-		# x[-1] = paraparse.add_scores(base[ind][0].score, base[ind][1].score)
-		# x[-2] = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)
-		# x[-3] = abs(x[-1] - x[-2]) / (len(base[ind][0]) + len(base[ind][1]))
-		# x[-4] = (vio1 - vio2) * 1. / (len(base[ind][0]) + len(base[ind][1]))		
+		x = [0,] * (len(feat2ind) + 7)
+		x[-1] = paraparse.add_scores(base[ind][0].score, base[ind][1].score)
+		x[-2] = paraparse.add_scores(dual[ind][0].score, dual[ind][1].score)
+		x[-3] = abs(x[-1] - x[-2]) / (len(base[ind][0]) + len(base[ind][1]))
+		x[-4] = (vio1 - vio2) * 1. / (len(base[ind][0]) + len(base[ind][1]))
+		tmp = get_features3(base[ind][0], base[ind][1], align[ind])
+		x[-5] = tmp[0]
+		x[-6] = tmp[1]
+		x[-7] = tmp[2]
 		for f, v in feats.iteritems():
 			if counts[f] > th:
 				x[feat2ind[f]] = v
@@ -296,6 +355,32 @@ def preprocess3(gold, base, dual, align):
 
 	print  >> sys.stderr, '# features:', len(feat2ind)
 	print  >> sys.stderr, '# features:', sum([counts[x] > th for x in counts])
+	return np.array(X), np.array(y), indices, feat2ind
+
+def preprocess4(gold, base, dual, align):
+	indices = []
+	feat2ind = {}
+	counts = {}
+	X, y = [], []
+	ind = 0
+	for g, b, d in zip(gold, base, dual):
+		b_score = b[0].evaluate(g[0])
+		d_score = d[0].evaluate(g[0])
+		if b_score[0] > d_score[0]:
+			y.append(-1)
+			x = get_features3(b[0], b[1], align[ind])
+			indices.append(ind)
+		elif b_score[0] < d_score[0]:
+			y.append(1)
+			x = get_features3(b[0], b[1], align[ind])
+			indices.append(ind)
+		else:
+			ind += 1
+			continue
+		X.append(x)
+		ind += 1
+	# print  >> sys.stderr, '# features:', len(feat2ind)
+	# print  >> sys.stderr, '# features:', sum([counts[x] > th for x in counts])
 	return np.array(X), np.array(y), indices, feat2ind
 
 def read_data():

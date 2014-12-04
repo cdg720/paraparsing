@@ -3,6 +3,7 @@ import numpy as np
 import sys
 from CoNLL import Corpus
 
+
 if len(sys.argv) != 4:
 	print 'usage: python analyze.py gold, pred, csv'
 	print 'e.g.: python analyze.py ../data/dev1/gold.sd205 ../data/dev1/bllip.sd205 ../data/dev1/paraphrases.csv'

@@ -13,7 +13,7 @@ def nbest(sent):
 
 if len(sys.argv) != 4:
 	print 'usage: python parse.py paraphrases.csv mode parser'
-	print 'usage: python parse.py paraphrases.csv 0 bllip'	
+	print 'e.g: python parse.py paraphrases.csv 0 bllip'	
 	sys.exit(0)
 
 if sys.argv[3] == 'bllip':

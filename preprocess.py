@@ -257,4 +257,4 @@ def main():
 	#get_words(folder + 'gold', folder + 'sent1.tokenized', folder + 'sent2.tokenized')
 	#split_paraphrases()
 
-main()
+#main()
